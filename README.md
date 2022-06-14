@@ -5,11 +5,12 @@ for Graph Compression: Approximating Max-Flow, Linear Optimization
 and Centrality" by Moe Kayali and Dan Suciu.
 
 Contents:
-- `main.jl`: implementation of the Rothko algorithm
-- `datasets.jl`: handlers to ingest datasets
-- `flow.jl`: code for max-flow approximation
-- `optimize.jl`: code for linear program approximation
-- `centrality.jl`: code for betweenness centrality approximation
+- 'src/'
+  - `QuasiStableColors.jl`: implementation of the Rothko algorithm
+  - `datasets.jl`: handlers to ingest datasets
+  - `flow.jl`: code for max-flow approximation
+  - `optimize.jl`: code for linear program approximation
+  - `centrality.jl`: code for betweenness centrality approximation
 - `experiments/`
   - `figures.jl` color to make the karate club figure 
   - `histograms.jl` builds the histograms of color sizes
