@@ -27,7 +27,7 @@ function make_lp_plot()
     end
 
     hline!([1.0], label="exact", linestyle=:dash, lw=2)
-    ylabel!("q-error")
+    ylabel!("relative error")
     xlabel!("Runtime (% of baseline)")
 
     plot!(size=(400, 300), ylim=(0.95, 2.35), xlim=(0.0, 1.0), thickness_scaling=1.25,
@@ -53,7 +53,7 @@ function make_lp_color_plot()
     end
 
     hline!([1.0], label="exact", linestyle=:dash, lw=2)
-    ylabel!("q-error")
+    ylabel!("relative error")
     xlabel!("Number of colors")
 
     plot!(size=(400, 300), ylim=(0.95, 2.5), xlim=(0.0, 150), thickness_scaling=1.25,
@@ -79,7 +79,7 @@ function make_flow_plot()
     end
 
     hline!([1.0], label="exact", linestyle=:dash, lw=2)
-    ylabel!("q-error")
+    ylabel!("relative error")
     xlabel!("Runtime (% of baseline)")
 
     plot!(size=(400, 300), ylim=(0.95, 2.0), xlim=(0.0, 1.5), thickness_scaling=1.25,
@@ -105,7 +105,7 @@ function make_flow_color_plot()
     end
 
     hline!([1.0], label="exact", linestyle=:dash, lw=2)
-    ylabel!("q-error")
+    ylabel!("relative error")
     xlabel!("Number of colors")
 
     plot!(size=(400, 300), ylim=(0.95, 2.0), xlim=(0.0, 35), thickness_scaling=1.25,
@@ -156,3 +156,7 @@ end
 
 make_lp_plot()
 make_lp_color_plot()
+make_flow_plot()
+make_flow_color_plot()
+make_centrality_plot()
+make_centrality_color_plot()

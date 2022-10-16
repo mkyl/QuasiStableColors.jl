@@ -45,10 +45,10 @@ for i in [1 2 4 8 16 32 64 128 256]
 end
 
 plot([stable, q_stable], labels=["stable" "q-stable, q=4"], legend=:topleft,
-    markershape=:auto, ylim=(0, 1100), size=(425, 250))
-xticks!([0:64;], ["", "Original", "1", "2", "4", "8", "16", "32", "64", "128", "256"])
-xlabel!("Number of random edges added")
-ylabel!("Number of colors needed")
-hline!([1000], label="# of vertices", linestyle=:dash)
+    markershape=:auto, ylim=(0, 1100), size=(425, 200))
+xticks!([1:64;], ["Original", "1", "2", "4", "8", "16", "32", "64", "128", "256"])
+xlabel!("Random edges added")
+ylabel!("Colors needed")
+hline!([1000], label="# of graph vertices", linestyle=:dash)
 
 savefig("robustness.pdf")
