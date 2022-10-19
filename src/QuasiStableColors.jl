@@ -27,7 +27,7 @@ refine_stable(G::AbstractGraph{T}; args...) where {T} =
     refine_fixpoint(G; eps=0.0, args...)
 
 
-function pick_witness(P, P_sparse, weights, neighbor_base, upper_base, lower_base,
+function pick_witness(P, P_sparse::SparseMatrixCSC{Float64,Int}, weights::SparseMatrixCSC{Float64,Int}, upper_base, lower_base,
     counts_base, errors_base)
     n, m = size(P_sparse)
 
@@ -45,8 +45,8 @@ function pick_witness(P, P_sparse, weights, neighbor_base, upper_base, lower_bas
         lower_deg[i, :] .= transpose(minimum(neighbor[X, :], dims=1))
     end
 
-    errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P]) .* [length(P_i) for P_i in P]
-    #errors .= upper_deg - lower_deg
+    #errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P]) .* [length(P_i) for P_i in P]
+    errors .= upper_deg - lower_deg
 
     # check for NaN or Inf
     @assert all(isfinite, errors)
@@ -91,7 +91,7 @@ function refine_fixpoint(G::AbstractGraph{T};
 
     if weights === nothing
         weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64; dir=:both))
-        weights.nzval .= 1
+        weights.nzval .= 1.0
     end
 
     if early_stop == Inf
@@ -107,8 +107,8 @@ function refine_fixpoint(G::AbstractGraph{T};
 
     while length(P) < early_stop
         P_sparse = partition_matrix(P)
-        witness_i, witness_j, split_deg, error, q_error = pick_witness(P, P_sparse, weights,
-            neighbor_base, upper_base, lower_base, counts_base, errors_base)
+        witness_i, witness_j, split_deg, _, q_error = pick_witness(P, P_sparse, weights,
+            upper_base, lower_base, counts_base, errors_base)
 
         if q_error <= eps
             break
@@ -136,7 +136,7 @@ function refine_fixpoint(G::AbstractGraph{T};
 
     P_sparse = partition_matrix(P)
     _, _, _, error, q_error = pick_witness(P, P_sparse, weights,
-        neighbor_base, upper_base, lower_base, counts_base, errors_base)
+        upper_base, lower_base, counts_base, errors_base)
     @debug "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
     return P
 end
