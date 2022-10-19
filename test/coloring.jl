@@ -2,9 +2,11 @@ using Test
 
 using Graphs
 
-"""Returns true if `P` is a valid relative `c`-coloring of G=(`V`,`E`)."""
-function verify_rel_c_color(G::AbstractGraph{T}, P::Set{Set{T}},
-    c::Number) where {T}
+include("../src/datasets.jl")
+
+"""Returns true if `P` is a valid relative `q`-coloring of G=(`V`,`E`)."""
+function verify_q_color(G::AbstractGraph{T}, P::Vector{Vector{T}},
+    q::Number) where {T}
     # check disjointness
     if mapreduce(length, +, P) != nv(G)
         @warn "Vertex appears in more than one partition"
@@ -12,21 +14,23 @@ function verify_rel_c_color(G::AbstractGraph{T}, P::Set{Set{T}},
     end
 
     # check completness
-    if reduce(∪, P) != Set(vertices(G))
+    if reduce(∪, P; init=Set{T}()) != Set(vertices(G))
         @warn "Partition does not cover all nodes in V"
         return false
     end
 
+    max_q = 0
+
     # check main property
     for P_i in P, P_j in P
         # count number of P_j neighbors
-        N = map(x -> length(neighbors(G, x) ∩ P_j), collect(P_i))
+        N = map(x -> length(neighbors(G, x) ∩ P_j), P_i)
         # TODO check inneighbors for digraphs
-        c_measured = maximum(N) / max(minimum(N), 1)
-        if c_measured > c
-            @warn "c measured at least: $c_measured"
-            return false
-        end
+        max_q = max(max_q, maximum(N) - minimum(N))
+    end
+    if max_q > q
+        @warn "max_q measured at: $max_q"
+        return false
     end
     return true
 end
@@ -99,10 +103,17 @@ end
         @test Set(Set(x) for x in P) == Set([V])
     end
 
+    @testset "OpenFlights" begin
+        G = datasets.openflight()
+        c = 8.0
+        P = refine_fixpoint(G, eps=c, early_stop=1000)
+        @test verify_q_color(G, P, c)
+    end
+
     @test_skip @testset "DBLP co-authorship" begin
         G = datasets.dblp()
         c = 8.0
-        P = refine_abs_approx(G, c)
-        @test verify_abs_c_color(G, P, c)
+        P = refine_fixpoint(G, c)
+        @test verify_q_color(G, P, c)
     end
 end

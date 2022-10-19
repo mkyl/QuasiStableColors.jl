@@ -21,7 +21,7 @@ using Graphs
     end
 
     # see Figure 3, https://doi.org/10.1145/3375395.3387641
-    @test_broken @testset "stable-coloring five colors" begin
+    @test_skip @testset "stable-coloring five colors" begin
         E = [Edge(1, 5), Edge(2, 4), Edge(2, 5), Edge(2, 8), Edge(3, 5), Edge(3, 9),
             Edge(6, 9), Edge(7, 8), Edge(8, 9)]
         G = SimpleGraphFromIterator(E)
@@ -29,6 +29,6 @@ using Graphs
         C₀ = Centrality.approx_betweenness_centrality(G, eps=0.0)
         C = betweenness_centrality(G, normalize=false)
 
-        @test_broken C == C₀
+        @test C == C₀
     end
 end

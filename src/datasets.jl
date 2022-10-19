@@ -23,7 +23,8 @@ SAWTOOTH0 = "Datasets/BVZ-sawtooth0.max"
 SAWTOOTH1 = "Datasets/BVZ-sawtooth1.max"
 
 function tsv_graph(name)
-    M = readdlm(name, '\t', Int, '\n', comments=true, comment_char='#')
+    path = joinpath(@__DIR__, "../../../", name)
+    M = readdlm(path, '\t', Int, '\n', comments=true, comment_char='#')
     n = max(maximum(M[:, 1]), maximum(M[:, 2]))
     G = SimpleGraph{Int}(n)
     for r in eachrow(M)
@@ -41,7 +42,8 @@ epinions = () -> tsv_graph(EPINIONS)
 deezer = () -> tsv_graph(DEEZER)
 
 function dblp()
-    M = readdlm(DBLP, '\t', Int, '\n')
+    path = joinpath(@__DIR__, "../../../", DBLP)
+    M = readdlm(path, '\t', Int, '\n')
     n = max(maximum(M[:, 1]), maximum(M[:, 2]))
     G = SimpleGraph{Int}(n)
     for r in eachrow(M)
@@ -52,7 +54,8 @@ function dblp()
 end
 
 function airports_labelled()
-    f = CSV.File(AIRPORTS, header=false)
+    path = joinpath(@__DIR__, "../../../", AIRPORTS)
+    f = CSV.File(path, header=false)
     V = Set(f.Column3) ∪ Set(f.Column5)
     lookup = Dict((x, i) for (i, x) in enumerate(V))
 
@@ -65,7 +68,8 @@ function airports_labelled()
 end
 
 function openflight()
-    f = CSV.File(AIRPORTS, header=false)
+    path = joinpath(@__DIR__, "../../../", AIRPORTS)
+    f = CSV.File(path, header=false)
     V = Set(f.Column3) ∪ Set(f.Column5)
     lookup = Dict((x, i) for (i, x) in enumerate(V))
 

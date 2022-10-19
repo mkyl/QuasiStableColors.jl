@@ -90,7 +90,6 @@ function refine_fixpoint(G::AbstractGraph{T};
     end
 
     if weights === nothing
-        @info "Assuming unit capacities"
         weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64; dir=:both))
         weights.nzval .= 1
     end
@@ -130,8 +129,6 @@ function refine_fixpoint(G::AbstractGraph{T};
         @assert length(retained) != 0
         @assert length(ejected) != 0
 
-        # println("ejected $(100 * length(ejected) / (length(ejected) + length(retained)))%")
-
         # update the partitions
         P[witness_i] = retained
         push!(P, ejected)
@@ -140,7 +137,7 @@ function refine_fixpoint(G::AbstractGraph{T};
     P_sparse = partition_matrix(P)
     _, _, _, error, q_error = pick_witness(P, P_sparse, weights,
         neighbor_base, upper_base, lower_base, counts_base, errors_base)
-    @info "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
+    @debug "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
     return P
 end
 
