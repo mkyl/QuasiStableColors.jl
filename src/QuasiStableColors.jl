@@ -16,7 +16,7 @@ include("misc.jl")
 using Graphs
 using SparseArrays
 using DataStructures: counter
-using Statistics: mean
+using Statistics: mean, median
 
 Color = UInt
 
@@ -27,60 +27,11 @@ refine_stable(G::AbstractGraph{T}; args...) where {T} =
     refine_fixpoint(G; eps=0.0, args...)
 
 
-function quotient_graph_2(G::AbstractGraph{T};
-    weights::Union{SparseMatrixCSC{<:Number,Int},Nothing}=nothing, args...) where {T}
-    P = refine_fixpoint(G; weights=weights, args...)
-
-    n = length(P)
-    Gʹ = SimpleDiGraph(n)
-
-    lookup = Dict{T,Int}()
-    sizehint!(lookup, nv(G))
-    for (color, nodes) in enumerate(P)
-        for x in nodes
-            lookup[x] = color
-        end
-    end
-
-    Eʹ = counter(Tuple{Int,Int})
-    for e in edges(G)
-        u, v = lookup[src(e)], lookup[dst(e)]
-        if weights !== nothing
-            c = weights[src(e), dst(e)]
-            inc!(Eʹ, (u, v), c)
-        else
-            inc!(Eʹ, (u, v))
-        end
-    end
-
-    I, J, V = [], [], []
-    for (key, count) in Eʹ
-        u, v = key
-        add_edge!(Gʹ, u, v)
-        push!(I, u)
-        push!(J, v)
-        push!(V, count)
-    end
-    C::SparseMatrixCSC{Int,Int} = sparse(I, J, V, nv(Gʹ), nv(Gʹ))
-
-    return Gʹ, C, lookup, P
-end
-
-function geomean(a)
-    s = 0.0
-    n = length(a)
-    for i = 1:n
-        @inbounds s += log(a[i])
-    end
-    return exp(s / n)
-end
-
-function pick_witness(P, P_sparse, weights, nz, neighbor_base, upper_base, lower_base,
+function pick_witness(P, P_sparse, weights, neighbor_base, upper_base, lower_base,
     counts_base, errors_base)
     n, m = size(P_sparse)
 
-    neighbor = @view neighbor_base[1:n, 1:m]
-    neighbor .= weights * P_sparse
+    neighbor::SparseMatrixCSC{Float64,Int} = weights * P_sparse
 
     upper_deg = @view upper_base[1:m, 1:m]
     lower_deg = @view lower_base[1:m, 1:m]
@@ -88,14 +39,14 @@ function pick_witness(P, P_sparse, weights, nz, neighbor_base, upper_base, lower
     counts = @view counts_base[1:m, 1:m]
 
     # group the rows by partition
-    for i in 1:length(P)
+    for i in eachindex(P)
         X::Vector{Int64} = P[i]
         upper_deg[i, :] .= transpose(maximum(neighbor[X, :], dims=1))
         lower_deg[i, :] .= transpose(minimum(neighbor[X, :], dims=1))
     end
 
-    # errors .= (upper_deg - lower_deg) .* transpose([1 / sqrt(length(P_i)) for P_i in P])
-    errors .= upper_deg - lower_deg
+    errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P]) .* [length(P_i) for P_i in P]
+    #errors .= upper_deg - lower_deg
 
     # check for NaN or Inf
     @assert all(isfinite, errors)
@@ -105,7 +56,6 @@ function pick_witness(P, P_sparse, weights, nz, neighbor_base, upper_base, lower
     error_val = mean(errors)
     witness_i, witness_j = witness[1], witness[2]
 
-    #split_deg = geomean(neighbor[P[witness_i], witness_j])
     split_deg = mean(neighbor[P[witness_i], witness_j])
 
     if length(P) % 10 == 0
@@ -141,11 +91,9 @@ function refine_fixpoint(G::AbstractGraph{T};
 
     if weights === nothing
         @info "Assuming unit capacities"
-        weights::SparseMatrixCSC{Float64,Int} = adjacency_matrix(G)
+        weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64; dir=:both))
+        weights.nzval .= 1
     end
-
-    nz::SparseMatrixCSC{Float64,Int} = copy(weights)
-    nz.nzval .= 1
 
     if early_stop == Inf
         n = 250
@@ -160,7 +108,7 @@ function refine_fixpoint(G::AbstractGraph{T};
 
     while length(P) < early_stop
         P_sparse = partition_matrix(P)
-        witness_i, witness_j, split_deg, error, q_error = pick_witness(P, P_sparse, weights, nz,
+        witness_i, witness_j, split_deg, error, q_error = pick_witness(P, P_sparse, weights,
             neighbor_base, upper_base, lower_base, counts_base, errors_base)
 
         if q_error <= eps
@@ -170,7 +118,7 @@ function refine_fixpoint(G::AbstractGraph{T};
         # split the witness_i-th color 
         retained::Vector{T} = []
         ejected::Vector{T} = []
-        neighbor::Matrix{Float64} = @view neighbor_base[1:nv(G), 1:length(P)]
+        neighbor::SparseMatrixCSC{Float64,Int} = weights * P_sparse
         for v in P[witness_i]
             if neighbor[v, witness_j] > split_deg
                 push!(ejected, v)
@@ -190,7 +138,7 @@ function refine_fixpoint(G::AbstractGraph{T};
     end
 
     P_sparse = partition_matrix(P)
-    _, _, _, error, q_error = pick_witness(P, P_sparse, weights, nz,
+    _, _, _, error, q_error = pick_witness(P, P_sparse, weights,
         neighbor_base, upper_base, lower_base, counts_base, errors_base)
     @info "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
     return P
@@ -281,5 +229,14 @@ function _refine_bipartite(M, P::Vector{Vector{Int}}, G::Vector{Vector{Int}})
     val, witness = findmax(errors)
     witness_i, witness_j = witness[1], witness[2]
     return val, witness_i, witness_j
+end
+
+function geomean(a)
+    s = 0.0
+    n = length(a)
+    for i = 1:n
+        @inbounds s += log(a[i])
+    end
+    return exp(s / n)
 end
 end

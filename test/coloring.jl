@@ -43,7 +43,7 @@ end
 
         P = refine_stable(G)
         V = Set(vertices(G))
-        @test_broken Set(Set(x) for x in P) == Set([V])
+        @test Set(Set(x) for x in P) == Set([V])
     end
 
     @testset "two-color chain" begin
@@ -103,6 +103,6 @@ end
         G = datasets.dblp()
         c = 8.0
         P = refine_abs_approx(G, c)
-        @test_broken verify_abs_c_color(G, P, c)
+        @test verify_abs_c_color(G, P, c)
     end
 end
