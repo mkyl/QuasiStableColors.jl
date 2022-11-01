@@ -2,9 +2,9 @@ using Documenter
 using QuasiStableColors
 
 makedocs(
-    sitename = "QuasiStableColors",
-    format = Documenter.HTML(),
-    modules = [QuasiStableColors]
+    sitename="QuasiStableColors.jl",
+    format=Documenter.HTML(),
+    modules=[QuasiStableColors]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.
