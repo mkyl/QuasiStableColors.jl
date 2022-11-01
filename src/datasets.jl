@@ -4,9 +4,28 @@ using DelimitedFiles
 using CSV
 using Graphs
 using SparseArrays
+using DataDeps
 
-DBLP = "Datasets/DBLP.tsv"
-AIRPORTS = "Datasets/routes.csv"
+register(DataDep("OpenFlights",
+    "OpenFlights.org Route database, see https://openflights.org/data.html",
+    "https://github.com/jpatokal/openflights/raw/1b649733a4d35f7668d901b936361ad4d3b7c6ac/data/routes.dat",
+    "bd373706238134f619c624c606dccc74c05c2582a977c489c81de501735f2390",
+))
+
+register(DataDep("DBLP",
+    "DBLP computer science co-authorship graph, see https://snap.stanford.edu/data/com-DBLP.html",
+    "https://snap.stanford.edu/data/bigdata/communities/com-dblp.ungraph.txt.gz",
+    "9eb0bd30312ddd04e2624f7c36c0983a2e99b116f0385be5a7fce6d6170f4cb3",
+    post_fetch_method=unpack,
+))
+
+register(DataDep("Karate",
+    "Zachary's Karate Club social network, see https://en.wikipedia.org/wiki/Zachary%27s_karate_club",
+    "http://konect.cc/files/download.tsv.ucidata-zachary.tar.bz2",
+    "37ad42a41e95a09c1d1e5de5ce9eae3a53d8170c6c4af6c4a0121885cafc2cef",
+    post_fetch_method=unpack,
+))
+
 ENRON = "Datasets/enron.tsv"
 ASTROPHYSICS = "Datasets/astrophysics.tsv"
 FACEBOOK = "Datasets/facebook.tsv"
@@ -22,8 +41,7 @@ VENUS1 = "Datasets/BVZ-venus1.max"
 SAWTOOTH0 = "Datasets/BVZ-sawtooth0.max"
 SAWTOOTH1 = "Datasets/BVZ-sawtooth1.max"
 
-function tsv_graph(name)
-    path = joinpath(@__DIR__, "../../../", name)
+function tsv_graph(path)
     M = readdlm(path, '\t', Int, '\n', comments=true, comment_char='#')
     n = max(maximum(M[:, 1]), maximum(M[:, 2]))
     G = SimpleGraph{Int}(n)
@@ -34,6 +52,7 @@ function tsv_graph(name)
     return G
 end
 
+karate = () -> tsv_graph(datadep"Karate/ucidata-zachary/out.ucidata-zachary")
 enron = () -> tsv_graph(ENRON)
 astrophysics = () -> tsv_graph(ASTROPHYSICS)
 facebook = () -> tsv_graph(FACEBOOK)
@@ -42,8 +61,8 @@ epinions = () -> tsv_graph(EPINIONS)
 deezer = () -> tsv_graph(DEEZER)
 
 function dblp()
-    path = joinpath(@__DIR__, "../../../", DBLP)
-    M = readdlm(path, '\t', Int, '\n')
+    path = datadep"DBLP/com-dblp.ungraph.txt"
+    M = readdlm(path, '\t', Int, '\n', comments=true, comment_char='#')
     n = max(maximum(M[:, 1]), maximum(M[:, 2]))
     G = SimpleGraph{Int}(n)
     for r in eachrow(M)
@@ -54,7 +73,7 @@ function dblp()
 end
 
 function airports_labelled()
-    path = joinpath(@__DIR__, "../../../", AIRPORTS)
+    path = datadep"OpenFlights/routes.dat"
     f = CSV.File(path, header=false)
     V = Set(f.Column3) ∪ Set(f.Column5)
     lookup = Dict((x, i) for (i, x) in enumerate(V))
@@ -68,7 +87,7 @@ function airports_labelled()
 end
 
 function openflight()
-    path = joinpath(@__DIR__, "../../../", AIRPORTS)
+    path = datadep"OpenFlights/routes.dat"
     f = CSV.File(path, header=false)
     V = Set(f.Column3) ∪ Set(f.Column5)
     lookup = Dict((x, i) for (i, x) in enumerate(V))
