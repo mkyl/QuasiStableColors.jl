@@ -27,16 +27,16 @@ refine_stable(G::AbstractGraph{T}; args...) where {T} =
     refine_fixpoint(G; eps=0.0, args...)
 
 
-function pick_witness(P, P_sparse::SparseMatrixCSC{Float64,Int}, weights::SparseMatrixCSC{Float64,Int}, upper_base, lower_base,
+function pick_witness(P, P_sparse::SparseMatrixCSC{Float64,Int},
+    weights::SparseMatrixCSC{Float64,Int}, upper_base, lower_base,
     counts_base, errors_base)
-    n, m = size(P_sparse)
+    _, m = size(P_sparse)
 
     neighbor::SparseMatrixCSC{Float64,Int} = weights * P_sparse
 
     upper_deg = @view upper_base[1:m, 1:m]
     lower_deg = @view lower_base[1:m, 1:m]
     errors = @view errors_base[1:m, 1:m]
-    counts = @view counts_base[1:m, 1:m]
 
     # group the rows by partition
     for i in eachindex(P)
