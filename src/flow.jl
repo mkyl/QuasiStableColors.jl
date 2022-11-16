@@ -26,8 +26,9 @@ function _quotient_graph(G::AbstractGraph{T};
     P_sparse = partition_matrix(P)
 
     if weights === nothing
-        @info "Assuming unit capacities"
+        @debug "Assuming unit capacities"
         weights::SparseMatrixCSC{Float64,Int} = adjacency_matrix(G)
+        weights.nzval .= 1.0
     end
 
     neighbor = weights * P_sparse

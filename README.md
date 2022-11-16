@@ -1,5 +1,7 @@
 # QuasiStableColors.jl
 
+![Project logo](docs/src/assets/logo.png)
+
 Code and experiments for the upcoming paper "Quasi-stable Coloring
 for Graph Compression: Approximating Max-Flow, Linear Optimization
 and Centrality" by Moe Kayali and Dan Suciu.
