@@ -1,6 +1,6 @@
 # QuasiStableColors.jl
-
 ![Project logo](docs/src/assets/logo.png)
+![continuous integration status badge](https://github.com/mkyl/QuasiStableColors.jl/actions/workflows/CI.yml/badge.svg)
 
 Code and experiments for the upcoming paper "Quasi-stable Coloring
 for Graph Compression: Approximating Max-Flow, Linear Optimization
