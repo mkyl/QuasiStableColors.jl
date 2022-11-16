@@ -27,7 +27,6 @@ If you use this library, we ask that you cite our paper:
 Quasi-stabling coloring was developed at the [School of Computer
 Science](https://www.cs.washington.edu) in the University of Washington, Seattle.
 ## Resources
-
 - **[Tutorial](@ref)**: examples and code to get started with using this library.
 - **[Questions](https://stackoverflow.com/questions/tagged/quasi-stable-colors)**: ask questions using the [`quasi-stable-colors` tag](https://stackoverflow.com/questions/tagged/quasi-stable-colors) on StackOverflow.
 - **[Reference](@ref API)**: Reference documentation for all the public functions of this library can be found in the [API](@ref) section. Specific sections explain the applications: maximum-flow/minimum-cut problems, betweenness centrality computation and linear optimization.

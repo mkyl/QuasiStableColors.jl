@@ -21,7 +21,9 @@ using Statistics: mean, median
 Color = UInt
 
 """
-Compute the stable coloring for the graph with vertices `V` and edges `E`.
+    refine_stable(G::AbstractGraph{T})
+
+Compute the stable coloring for the undirected graph `G`. Provided for comparasion.
 """
 refine_stable(G::AbstractGraph{T}; args...) where {T} =
     refine_fixpoint(G; eps=0.0, args...)
@@ -70,8 +72,23 @@ function pick_witness(P, P_sparse::SparseMatrixCSC{Float64,Int},
 end
 
 """
-Compute a quasi-stable coloring for the graph with vertices `V` and edges `E`. Provide
-`eps` for a coloring with q-error eps or `early_stop` for a coloring with a specific size.
+    refine_fixpoint(
+        G::AbstractGraph{T},
+        weights = nothing,
+        special =  Set{T}(),
+        warm_start = Vector{Vector{T}}(),
+        early_stop = Inf,
+        eps = 0.0,
+    )
+
+
+Compute a quasi-stable coloring for the undirected graph `G`. Typically, you should 
+set one of:
+- **`eps`**: maximum q-error allowed
+- **`early_stop`**: number of colors to use
+
+Optional parameters:
+- **`warm_start`**: coloring to refine. If not provided, start using trivial (single color) partitioning assumed.
 """
 function refine_fixpoint(G::AbstractGraph{T};
     weights::Union{SparseMatrixCSC{<:Number,Int},Nothing}=nothing,
@@ -142,7 +159,8 @@ function refine_fixpoint(G::AbstractGraph{T};
 end
 
 """
-Equivalent to `refine_fixpoint()` but optimized for bipartite graphs.
+Equivalent to `refine_fixpoint` but optimized for bipartite graphs. Faster but less
+general.
 """
 function refine_bipartite(M; early_stop=Inf,
     eps::Float64=0.0)
