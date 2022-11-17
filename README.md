@@ -7,9 +7,9 @@
 | [Stable](https://mkyl.github.io/QuasiStableColors.jl/stable/)  | ![continuous integration status badge](https://github.com/mkyl/QuasiStableColors.jl/actions/workflows/CI.yml/badge.svg)  |
 
 
-Code and experiments for the upcoming paper "Quasi-stable Coloring
+Code and experiments for the upcoming paper *"Quasi-stable Coloring
 for Graph Compression: Approximating Max-Flow, Linear Optimization
-and Centrality" by Moe Kayali and Dan Suciu to appear in VLDB '23. 
+and Centrality"* by Moe Kayali and Dan Suciu, to appear in VLDB '23. 
 
 Contents:
 - 'src/'
