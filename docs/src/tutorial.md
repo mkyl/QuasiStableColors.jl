@@ -5,7 +5,7 @@ Let's explore how to use the QuasiStableColors library with an example.
 
 ## Installation
 First, install the library. One option is to run the following code:
-```@example
+```julia
 using Pkg
 Pkg.add("QuasiStableColors")
 ```
@@ -28,11 +28,10 @@ n = 8
 g = Graphs.SimpleGraphs.dorogovtsev_mendes(n, seed=0)
 
 using GraphMakie, CairoMakie
-f, ax, p = graphplot(g)
+graphplot(g)
+f, ax, p = graphplot(g) #hide
 hidedecorations!(ax); hidespines!(ax) #hide
 save("graph.svg", f); nothing #hide
 ```
 
-```@raw html
-<img src="/graph.svg" alt="Illustration of network graph">
-```
+![Example network graph from above code](graph.svg)
