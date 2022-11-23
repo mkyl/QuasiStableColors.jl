@@ -1,7 +1,7 @@
 name = "QuasiStableColors"
 uuid = "9c3856af-3e7c-4d34-a6af-a406867b22e4"
 authors = ["Moe Kayali <kayali@cs.washington.edu>"]
-version = "0.1.0"
+version = "0.1.2"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
