@@ -9,7 +9,7 @@
 
 Code and experiments for the upcoming paper *"Quasi-stable Coloring
 for Graph Compression: Approximating Max-Flow, Linear Optimization
-and Centrality"* by Moe Kayali and Dan Suciu, to appear in VLDB '23. 
+and Centrality"* by Moe Kayali and Dan Suciu, to appear in VLDB '23. Find the paper [here](https://arxiv.org/abs/2211.11912).
 
 Contents:
 - 'src/'
