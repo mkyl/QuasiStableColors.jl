@@ -1,6 +1,6 @@
 # QuasiStableColors.jl
-*Graph compression for performant approximations*
-![Project logo](docs/src/assets/logo.png)
+*Graph compression for performant approximations*  
+![Project logo](docs/src/assets/logo.png)  
 
 | Documentation  | Build Status |
 | ------------- | ------------- |
