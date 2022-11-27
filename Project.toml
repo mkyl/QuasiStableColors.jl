@@ -1,14 +1,12 @@
 name = "QuasiStableColors"
 uuid = "9c3856af-3e7c-4d34-a6af-a406867b22e4"
 authors = ["Moe Kayali <kayali@cs.washington.edu>"]
-version = "0.1.2"
+version = "0.2.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 GraphsFlows = "06909019-6f44-4949-96fc-b9d9aaa02889"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
@@ -21,8 +19,6 @@ Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
 [compat]
 CSV = "0.10"
 DataDeps = "0.7"
-DataStructures = "0.18"
-Documenter = "0.27"
 Graphs = "1.5"
 GraphsFlows = "0.1"
 JuMP = "1.1"

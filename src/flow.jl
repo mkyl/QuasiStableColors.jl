@@ -10,7 +10,7 @@ include("misc.jl")
 
 function _quotient_graph(G::AbstractGraph{T};
     weights::Union{SparseMatrixCSC{<:Number,Int},Nothing}=nothing, args...) where {T}
-    P = refine_fixpoint(G; weights=weights, args...)
+    P = q_color(G; weights=weights, args...)
 
     k = length(P)
     G₀ = SimpleDiGraph(k)

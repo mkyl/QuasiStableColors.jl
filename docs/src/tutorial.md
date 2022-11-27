@@ -37,7 +37,7 @@ save("graph.svg", f); nothing #hide
 
 Now, let's generate a quasi-stable coloring `C` where we allow at most one edge error (*i.e.* $q=1$).
 ```@example coloring
-C = QuasiStableColors.refine_fixpoint(g, eps=1.0)
+C = QuasiStableColors.q_color(g, q=1.0)
 ```
 
 We get a four-partition coloring. Let's assign a unique graphical color to each:

@@ -6,7 +6,7 @@ include("centrality.jl")
 include("flow.jl")
 include("optimize.jl")
 
-export refine_stable, refine_fixpoint, refine_bipartite, Color
+export refine_stable, q_color, refine_bipartite, Color
 export approx_betweenness_centrality
 export lifted_maxflow
 export lifted_maximize, lifted_minimize, maximize, minimize
@@ -15,7 +15,6 @@ include("misc.jl")
 
 using Graphs
 using SparseArrays
-using DataStructures: counter
 using Statistics: mean, median
 
 Color = UInt
@@ -26,19 +25,65 @@ Color = UInt
 Compute the stable coloring for the undirected graph `G`. Provided for comparasion.
 """
 refine_stable(G::AbstractGraph{T}; args...) where {T} =
-    refine_fixpoint(G; eps=0.0, args...)
+    q_color(G; q=0.0, args...)
+
+
+"""Book-keeping datastructure for the q-coloring algorithm."""
+struct ColorStats
+    v::Int
+    n::Int
+    neighbor_base::Matrix{Float64}
+    upper_base::Matrix{Float64}
+    lower_base::Matrix{Float64}
+    counts_base::Matrix{UInt}
+    errors_base::Matrix{Float64}
+end
+
+function ColorStats(v::Int, n::Int)
+    return ColorStats(
+        v,
+        n,
+        zeros(v, n),
+        zeros(n, n),
+        fill(+Inf, n, n),
+        zeros(n, n),
+        zeros(n, n),
+    )
+end
+
+
+"""Resize `old` to have size `n`."""
+function ColorStats(old::ColorStats,v::Int, n::Int)
+    result = ColorStats(
+        v,
+        n,
+        zeros(v, n),
+        zeros(n, n),
+        fill(+Inf, n, n),
+        zeros(n, n),
+        zeros(n, n),
+    )
+
+    m = old.n
+    result.neighbor_base[:, 1:m] .= old.neighbor_base
+    result.upper_base[1:m, 1:m] .= old.upper_base
+    result.lower_base[1:m, 1:m] .= old.lower_base
+    result.counts_base[1:m, 1:m] .= old.counts_base
+    result.errors_base[1:m, 1:m] .= old.errors_base
+
+    return result
+end
 
 
 function pick_witness(P, P_sparse::SparseMatrixCSC{Float64,Int},
-    weights::SparseMatrixCSC{Float64,Int}, upper_base, lower_base,
-    counts_base, errors_base)
+    weights::SparseMatrixCSC{Float64,Int}, stats::ColorStats)
     _, m = size(P_sparse)
 
     neighbor::SparseMatrixCSC{Float64,Int} = weights * P_sparse
 
-    upper_deg = @view upper_base[1:m, 1:m]
-    lower_deg = @view lower_base[1:m, 1:m]
-    errors = @view errors_base[1:m, 1:m]
+    upper_deg = @view stats.upper_base[1:m, 1:m]
+    lower_deg = @view stats.lower_base[1:m, 1:m]
+    errors = @view stats.errors_base[1:m, 1:m]
 
     # group the rows by partition
     for i in eachindex(P)
@@ -72,30 +117,31 @@ function pick_witness(P, P_sparse::SparseMatrixCSC{Float64,Int},
 end
 
 """
-    refine_fixpoint(
+    q_color(
         G::AbstractGraph{T},
-        weights = nothing,
+        q = 0.0,
+        n_colors = Inf,
+        weights::SparseMatrixCSC{<:Number,Int} = nothing,
         special =  Set{T}(),
         warm_start = Vector{Vector{T}}(),
-        early_stop = Inf,
-        eps = 0.0,
     )
 
 
 Compute a quasi-stable coloring for the undirected graph `G`. Typically, you should 
 set one of:
-- **`eps`**: maximum q-error allowed
-- **`early_stop`**: number of colors to use
+- **`q`**: maximum q-error allowed
+- **`n_colors`**: number of colors to use
 
 Optional parameters:
 - **`warm_start`**: coloring to refine. If not provided, start using trivial (single color) partitioning assumed.
+- **`weights`**: edge weights to use
 """
-function refine_fixpoint(G::AbstractGraph{T};
+function q_color(G::AbstractGraph{T};
     weights::Union{SparseMatrixCSC{<:Number,Int},Nothing}=nothing,
     special::Set{T}=Set{T}(),
     warm_start::Vector{Vector{T}}=Vector{Vector{T}}(),
-    early_stop=Inf,
-    eps::Float64=0.0) where {T}
+    n_colors=Inf,
+    q::Float64=0.0) where {T}
 
     V = Set(vertices(G))
     local P::Vector{Vector{T}}
@@ -111,23 +157,18 @@ function refine_fixpoint(G::AbstractGraph{T};
         weights.nzval .= 1.0
     end
 
-    if early_stop == Inf
-        n = 250
-    else
-        n = early_stop
-    end
-    neighbor_base::Matrix{Float64} = zeros(nv(G), n)
-    upper_base::Matrix{Float64} = zeros(n, n)
-    lower_base::Matrix{Float64} = fill(+Inf, n, n)
-    counts_base::Matrix{UInt} = zeros(n, n)
-    errors_base::Matrix{Float64} = zeros(n, n)
+    color_stats = ColorStats(nv(G), floor(Int, min(n_colors, 128)))
 
-    while length(P) < early_stop
+    while length(P) < n_colors
+        if length(P) == color_stats.n
+            color_stats = ColorStats(color_stats, nv(G), color_stats.n * 2)
+        end
+
         P_sparse = partition_matrix(P)
         witness_i, witness_j, split_deg, _, q_error = pick_witness(P, P_sparse, weights,
-            upper_base, lower_base, counts_base, errors_base)
+            color_stats)
 
-        if q_error <= eps
+        if q_error <= q
             break
         end
 
@@ -152,8 +193,7 @@ function refine_fixpoint(G::AbstractGraph{T};
     end
 
     P_sparse = partition_matrix(P)
-    _, _, _, error, q_error = pick_witness(P, P_sparse, weights,
-        upper_base, lower_base, counts_base, errors_base)
+    _, _, _, error, q_error = pick_witness(P, P_sparse, weights, color_stats)
     @debug "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
     return P
 end
@@ -162,8 +202,8 @@ end
 Equivalent to `refine_fixpoint` but optimized for bipartite graphs. Faster but less
 general.
 """
-function refine_bipartite(M; early_stop=Inf,
-    eps::Float64=0.0)
+function refine_bipartite(M; n_colors=Inf,
+    q::Float64=0.0)
     M_t = transpose(M)
     m, n = size(M)
     P_row::Vector{Vector{Int}} = [collect(1:m-1), [m]]
@@ -171,7 +211,7 @@ function refine_bipartite(M; early_stop=Inf,
 
     i = 1
     err = Inf
-    while i < early_stop && err > eps
+    while i < n_colors && err > q
         if i % 10 == 0
             @debug "error, colors:" err i
         end
@@ -181,7 +221,7 @@ function refine_bipartite(M; early_stop=Inf,
         new_color::Vector{Int} = []
         err = max(col_err, row_err)
 
-        if err <= eps
+        if err <= q
             break
         end
 

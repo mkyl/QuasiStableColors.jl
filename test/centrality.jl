@@ -8,7 +8,7 @@ using Graphs
         E = [Edge(1, 2), Edge(1, 3), Edge(2, 4), Edge(3, 4), Edge(4, 5)]
         G = SimpleGraphFromIterator(E)
         C = betweenness_centrality(G, normalize=false)
-        C₀ = Centrality.approx_betweenness_centrality(G, eps=0.0)
+        C₀ = Centrality.approx_betweenness_centrality(G, q=0.0)
         @test C == C₀
     end
 
@@ -16,7 +16,7 @@ using Graphs
         E = [Edge(1, 2), Edge(1, 3), Edge(2, 3), Edge(2, 4), Edge(3, 4), Edge(4, 5)]
         G = SimpleGraphFromIterator(E)
         C = betweenness_centrality(G, normalize=false)
-        C₀ = Centrality.approx_betweenness_centrality(G, eps=0.0)
+        C₀ = Centrality.approx_betweenness_centrality(G, q=0.0)
         @test C == C₀
     end
 
@@ -26,7 +26,7 @@ using Graphs
             Edge(6, 9), Edge(7, 8), Edge(8, 9)]
         G = SimpleGraphFromIterator(E)
 
-        C₀ = Centrality.approx_betweenness_centrality(G, eps=0.0)
+        C₀ = Centrality.approx_betweenness_centrality(G, q=0.0)
         C = betweenness_centrality(G, normalize=false)
 
         @test C == C₀

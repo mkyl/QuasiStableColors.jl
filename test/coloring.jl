@@ -88,7 +88,7 @@ end
         add_edge!(G, 3, 4)
         add_edge!(G, 4, 4)
 
-        P = refine_fixpoint(G, eps=2.0)
+        P = q_color(G, q=2.0)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
@@ -98,22 +98,23 @@ end
         add_edge!(G, 1, 2)
         add_edge!(G, 2, 3)
 
-        P = refine_fixpoint(G, eps=3.0)
+        P = q_color(G, q=3.0)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
 
     @testset "OpenFlights" begin
         G = datasets.openflight()
-        c = 8.0
-        P = refine_fixpoint(G, eps=c, early_stop=1000)
+        c = 4.0
+        # to test data structure resizing logic
+        P = q_color(G, q=c)
         @test verify_q_color(G, P, c)
     end
 
     @test_skip @testset "DBLP co-authorship" begin
         G = datasets.dblp()
         c = 8.0
-        P = refine_fixpoint(G, c)
+        P = q_color(G, q=c)
         @test verify_q_color(G, P, c)
     end
 end
