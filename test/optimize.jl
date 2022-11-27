@@ -104,7 +104,7 @@ end
     @testset "stable coloring, stigler diet" begin
         A, b, c = stigler_diet()
         V1 = Optimize.minimize(A, b, c)
-        V2 = Optimize.lifted_minimize(A, b, c; eps=0.0)
+        V2 = Optimize.lifted_minimize(A, b, c; q=0.0)
         @test c' * V1 ≈ V2
     end
 
@@ -114,7 +114,7 @@ end
         c = [9, 10, 50]
         z = c' * Optimize.maximize(A, b, c)
         @test z ≈ 128.157 atol = 0.001
-        z₀ = Optimize.lifted_maximize(A, b, c; eps=1.0)
+        z₀ = Optimize.lifted_maximize(A, b, c; q=1.0)
         # meets or beats reported error
         @test abs(z₀ - z) <= abs(z - 130.199)
     end

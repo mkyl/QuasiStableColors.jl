@@ -33,7 +33,7 @@ function _lifted_opt(A, b::Vector, c::Vector; obj=MathOptInterface.MIN_SENSE, ar
     b₂ = U * b
     c₂ = V * c
 
-    @info "lifted linear program size: " size(A₂)
+    @debug "lifted linear program size: " size(A₂)
     # solve the lifted problem
     z₂ = _optimize(A₂, b₂, c₂; obj=obj)
     if (z₂ !== nothing)
