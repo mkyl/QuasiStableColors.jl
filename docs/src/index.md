@@ -4,7 +4,7 @@
 QuasiStableColors.jl is a library for compressing graphs and approximating graph
 algorithms. The compressed graphs are computed using an algorithm called *quasi-stable
 coloring*, which results in a much smaller graph while preserving its key properties.
-This approach is introduced in the research paper "[Quasi-stable Coloring for Graph
+We introduce this approach in our research paper "[Quasi-stable Coloring for Graph
 Compression](https://arxiv.org/abs/2211.11912)."
 
 A major advantage of this approach is that many algorithms can be computed directly on
@@ -33,5 +33,5 @@ Quasi-stabling coloring was developed within the [databases group](https://db.cs
 ## Resources
 - **[Tutorial](@ref)**: Start here! Examples and code to get started with using this library.
 - **[Reference](@ref API)**: Reference documentation for all the public functions of this library can be found in the [API](@ref) section. Specific sections explain the applications: maximum-flow/minimum-cut problems, betweenness centrality computation and linear optimization.
-- **Questions**: ask questions and report bugs using [Github issues](https://github.com/mkyl/QuasiStableColors.jl/issues).
 - **[Researchers' Guide](@ref Internals)**: Want to extend quasi-stable coloring to a new domain? Perhaps you want to develop a variant of approximate colorings? The [Internals](@ref) section covers these topics.
+- **Questions**? Ask questions and report bugs using [Github issues](https://github.com/mkyl/QuasiStableColors.jl/issues).

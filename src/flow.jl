@@ -49,8 +49,20 @@ function _quotient_graph(G::AbstractGraph{T};
     return G₀, C₀, 𝜑, P
 end
 
-"""Compute the maximum flow from `s` to `t` in flow network `G`. Capacities defined
- using `weights=`."""
+"""
+    lifted_maxflow(
+        G::Graph,
+        s::Int,
+        t::Int,
+        q = 0.0,
+        n_colors = Inf,
+        weights::SparseMatrixCSC{<:Number,Int} = nothing,
+    )
+
+Compute the approxiamte maximum flow from `s` to `t` in flow network `G`. Capacities
+defined using `weights`; if none provided, unit capacities assumed.
+Uses a quasi-stable coloring with maximum error `q` or `n_colors` colors, whichever is
+smaller."""
 function lifted_maxflow(G, s::Int, t::Int; args...)::Number
     G₀, C₀, 𝜑, _ = _quotient_graph(G; special=Set([s, t]), args...)
     s₀, t₀ = 𝜑[s], 𝜑[t]
