@@ -35,7 +35,8 @@ save("graph.svg", f); nothing #hide
 
 ![Example network graph from above code](graph.svg)
 
-Now, let's generate a quasi-stable coloring `C` where we allow at most one edge error (*i.e.* $q=1$).
+Now, let's generate a quasi-stable coloring `C` where we allow at most one edge
+error (*i.e.* $q=1$).
 ```@example coloring
 C = QuasiStableColors.q_color(g, q=1.0)
 ```
@@ -60,3 +61,29 @@ save("graph-colors.svg", f_c); nothing #hide
 ```
 
 ![Same graph, now colored according to above partition](graph-colors.svg)
+
+## Approximation 
+Now that we have an idea of how coloring works, we examine why it's 
+useful as an approximation. We are going to try to compute maximum-flow on the
+graph.
+
+First, let's define the [maximum flow problem]
+(https://en.wikipedia.org/wiki/Maximum_flow_problem). Pick two special nodes and
+call them *source* and *sink*. Now imagine each edge is a pipe of water. The
+question max-flow problem asks is: *what is the largest volume of water can we
+simultaneously push from the source to the sink?*  For simplicity we assume each
+pipe has the same size (aka *unit capacities*), carrying at most a gallon per
+minute.
+
+For example, consider the flows between nodes $X$ and $Y$. One valid way to push
+water, called a *flow*, is to send one gallon / min of water down to Z and another
+gallon down to W. A total of two gallons would arrive at $Y$. But is the most water
+we could send?
+
+Many algorithms have been devised to solve this classic problem. Let's consider how
+we can use the lifted graph.
+
+If we run the algorithm on the ground graph, we find in fact this is the correct
+solution:
+
+
