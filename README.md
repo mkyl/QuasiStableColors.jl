@@ -9,4 +9,16 @@
 Code and experiments for the upcoming paper *"[Quasi-stable Coloring
 for Graph Compression: Approximating Max-Flow, Linear Optimization
 and Centrality](https://arxiv.org/abs/2211.11912)"* by Moe Kayali and Dan Suciu,
-appearing in VLDB '23.
+appearing in VLDB 2023.
+
+If you use this library, we ask that you cite our paper:
+```
+@article {q-stable-coloring,
+    title = {Quasi-stable Coloring for Graph Compression: Approximating Max-Flow, Linear Programs, and Centrality},
+    author = {Moe Kayali and Dan Suciu},
+    journal = {Proc. VLDB Endow.},
+    volume = {16},
+    number = {4},
+    year = {2022},
+}
+```
