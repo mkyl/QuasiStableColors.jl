@@ -10,6 +10,7 @@ export refine_stable, q_color, refine_bipartite, Color
 export approx_betweenness_centrality
 export lifted_maxflow
 export lifted_maximize, lifted_minimize, maximize, minimize
+export QuasiStableColoring
 
 include("misc.jl")
 
@@ -39,6 +40,14 @@ struct ColorStats
     errors_base::Matrix{Float64}
 end
 
+"""Output of a quasi-stable coloring algorithm."""
+struct QuasiStableColoring{T}
+    partitions::Vector{Vector{T}}
+    mapping::Dict{T,Color}
+    max_q::Number
+    avg_q::Number
+end
+
 function ColorStats(v::Int, n::Int)
     return ColorStats(
         v,
@@ -53,7 +62,7 @@ end
 
 
 """Resize `old` to have size `n`."""
-function ColorStats(old::ColorStats,v::Int, n::Int)
+function ColorStats(old::ColorStats, v::Int, n::Int)
     result = ColorStats(
         v,
         n,

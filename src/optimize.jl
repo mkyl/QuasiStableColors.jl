@@ -11,10 +11,23 @@ using LinearAlgebra
 
 using QuasiStableColors
 
-"""Approximate linear program `min c^T x where A x >= b, x >=0`."""
+"""
+    lifted_minimize(
+        A,
+        b::Vector,
+        c::Vector,
+        q=0.0,
+        n_colors=Inf,
+    )
+
+Approximate the linear program ``\\min c^T x \\text{ where } A x \\geq b, x \\geq 0``. 
+
+Uses a quasi-stable coloring with maximum error `q` or `n_colors` colors, whichever
+is smaller."""
 lifted_minimize(A, b, c; args...) = _lifted_opt(A, b, c; obj=MathOptInterface.MIN_SENSE,
     args...)
-"""Approximate linear program `max c^T x where A x <= b, x>=0`."""
+"""Same as `lifted_minimize` but for the linear program
+``\\max c^T x \\text{ where } A x \\leq b, x \\geq 0``."""
 lifted_maximize(A, b, c; args...) = _lifted_opt(A, b, c; obj=MathOptInterface.MAX_SENSE,
     args...)
 
