@@ -6,7 +6,15 @@ export approx_betweenness_centrality
 using QuasiStableColors
 using Graphs
 
-"""Approximate betweenness centrality using a size `colors` q-stable coloring."""
+"""
+    approx_betweenness_centrality(
+        G::Graph,
+        q::Number,
+        n_colors::Int,
+    )
+
+Approximate betweenness centrality using a q-stable coloring with maximum error `q` or
+size `n_colors`, whichever is smaller."""
 function approx_betweenness_centrality(G; args...)
     P = q_color(G; args...)
     C₀::Vector{Float64} = zeros(nv(G))

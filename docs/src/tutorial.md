@@ -60,3 +60,7 @@ save("graph-colors.svg", f_c); nothing #hide
 ```
 
 ![Same graph, now colored according to above partition](graph-colors.svg)
+
+## Approximation
+This section on how to use the coloring for graph algorithms is upcoming--for now see
+the [maximum-flow section](@ref Maximum-flow) of the API reference as an example.

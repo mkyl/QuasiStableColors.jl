@@ -20,7 +20,7 @@ the algorithm and experimental results.
 
 If you use this library, we ask that you cite our paper:
 ```
-@article {
+@article {q-stable-coloring,
     title = {Quasi-stable Coloring for Graph Compression: Approximating Max-Flow, Linear Programs, and Centrality},
     author = {Moe Kayali and Dan Suciu},
     journal = {Proc. VLDB Endow.},

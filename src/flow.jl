@@ -59,7 +59,7 @@ end
         weights::SparseMatrixCSC{<:Number,Int} = nothing,
     )
 
-Compute the approxiamte maximum flow from `s` to `t` in flow network `G`. Capacities
+Compute the approximate maximum flow from `s` to `t` in flow network `G`. Capacities
 defined using `weights`; if none provided, unit capacities assumed.
 Uses a quasi-stable coloring with maximum error `q` or `n_colors` colors, whichever is
 smaller."""

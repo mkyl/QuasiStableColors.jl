@@ -13,20 +13,48 @@ q_color(G;
     warm_start::Vector{Vector{T}}=Vector{Vector{T}}(),
     early_stop=Inf,
     eps::Float64=0.0) where {T}
+```
+Coloring an example graph:
+```@example
+using QuasiStableColors: q_color
+using Graphs
+
+# Make a chain graph
+G = SimpleGraph(4)
+add_edge!(G, 1, 1)
+add_edge!(G, 1, 2)
+add_edge!(G, 2, 3)
+add_edge!(G, 3, 4)
+add_edge!(G, 4, 4)
+
+# Color it
+P = q_color(G, q=2.0)
+```
+
+```@docs
 refine_bipartite
 QuasiStableColoring
 ```
 
-Finally, for comparison with prior work, we provide:
+Finally, for comparison with prior work, we provide the following method.
 ```@docs
 refine_stable(G)
 ```
 ## Maximum-flow
+This method for approximating [maximum-flow](https://en.wikipedia.org/wiki/Maximum_flow_problem) in a flow network.
 ```@docs
-QuasiStableColors.Flow
 QuasiStableColors.Flow.lifted_maxflow
 ```
 An example of how to compute an approximate maximum flow:
+```@example
+using QuasiStableColors.Flow: lifted_maxflow
+using Graphs
+
+E = [Edge(1,2), Edge(1, 3), Edge(1, 4), Edge(2, 5), Edge(3, 5), Edge(4, 5)]
+G = SimpleGraphFromIterator(E)
+
+lifted_maxflow(G, 1, 5; q=1.0)
+```
 
 ## Betweenness centrality
 This method is provided for approximating [betweenness centrality](https://en.wikipedia.org/wiki/Betweenness_centrality).
@@ -35,7 +63,22 @@ QuasiStableColors.Centrality.approx_betweenness_centrality
 ```
 To compute the estimated betweenness centralities on a sample graph:
 ```@example
-1+1
+using Graphs
+using QuasiStableColors.Centrality: approx_betweenness_centrality
+
+# Construct example graph
+E = [Edge(1, 5), Edge(2, 4), Edge(2, 5), Edge(2, 8), Edge(3, 5), Edge(3, 9),
+    Edge(6, 9), Edge(7, 8), Edge(8, 9)]
+G = SimpleGraphFromIterator(E)
+
+# Compute approximate centrality
+C₀ = approx_betweenness_centrality(G, q=0.0)
+println("Approximate centrality: $C₀")
+
+# Compute exact centrality for comparision
+using Graphs: betweenness_centrality
+C = betweenness_centrality(G, normalize=false)
+println("      Exact centrality: $C")
 ```
 ## Linear programming
 This section details methods related to approximating linear optimization.
