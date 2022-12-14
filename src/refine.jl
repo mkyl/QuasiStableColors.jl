@@ -77,7 +77,24 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
     P_sparse = partition_matrix(P)
     stats.neighbor = weights * P_sparse
 
-    _update_common!(stats, P)
+    m = length(P)
+    upper_deg = @view stats.upper_base[1:m, 1:m]
+    lower_deg = @view stats.lower_base[1:m, 1:m]
+    errors = @view stats.errors_base[1:m, 1:m]
+
+    # group the rows by partition
+    for i in eachindex(P)
+        X::Vector{Int64} = P[i]
+        upper_deg[i, :] .= transpose(maximum(stats.neighbor[X, :], dims=1))
+        lower_deg[i, :] .= transpose(minimum(stats.neighbor[X, :], dims=1))
+    end
+
+    #errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
+    # .* [length(P_i) for P_i in P]
+    errors .= upper_deg - lower_deg
+
+    # check for NaN or Inf
+    @assert all(isfinite, errors)
 end
 
 """Update stats by splitting one partition."""
@@ -95,26 +112,26 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
     stats.neighbor[:, old] = old_degs
     stats.neighbor[:, new] = new_degs
 
-    _update_common!(stats, P)
-end
-
-function _update_common!(stats::ColorStats, P::Vector{Vector{T}}) where {T}
-    # number of colors
-    m = size(stats.neighbor)[2]
-
+    m = length(P)
     upper_deg = @view stats.upper_base[1:m, 1:m]
     lower_deg = @view stats.lower_base[1:m, 1:m]
     errors = @view stats.errors_base[1:m, 1:m]
 
-    # group the rows by partition
+    upper_deg[old, :] .= transpose(maximum(stats.neighbor[P[old], :], dims=1))
+    lower_deg[old, :] .= transpose(minimum(stats.neighbor[P[old], :], dims=1))
+
+    upper_deg[new, :] .= transpose(maximum(stats.neighbor[P[new], :], dims=1))
+    lower_deg[new, :] .= transpose(minimum(stats.neighbor[P[new], :], dims=1))
+
     for i in eachindex(P)
         X::Vector{Int64} = P[i]
-        upper_deg[i, :] .= transpose(maximum(stats.neighbor[X, :], dims=1))
-        lower_deg[i, :] .= transpose(minimum(stats.neighbor[X, :], dims=1))
+        upper_deg[i, old] = maximum(stats.neighbor[X, old])
+        lower_deg[i, old] = minimum(stats.neighbor[X, old])
+
+        upper_deg[i, new] = maximum(stats.neighbor[X, new])
+        lower_deg[i, new] = minimum(stats.neighbor[X, new])
     end
 
-    #errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
-    # .* [length(P_i) for P_i in P]
     errors .= upper_deg - lower_deg
 
     # check for NaN or Inf
