@@ -2,7 +2,7 @@ using Test
 
 using Graphs
 
-include("../src/datasets.jl")
+include("datasets.jl")
 
 """Returns true if `P` is a valid relative `q`-coloring of G=(`V`,`E`)."""
 function verify_q_color(G::AbstractGraph{T}, P::Vector{Vector{T}},
