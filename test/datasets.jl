@@ -3,7 +3,6 @@ module datasets
 using DelimitedFiles
 using CSV
 using Graphs
-using SparseArrays
 using DataDeps
 
 register(DataDep("OpenFlights",
