@@ -13,12 +13,16 @@ appearing in VLDB 2023.
 
 If you use this library, we ask that you cite our paper:
 ```
-@article {q-stable-coloring,
-    title = {Quasi-stable Coloring for Graph Compression: Approximating Max-Flow, Linear Programs, and Centrality},
-    author = {Moe Kayali and Dan Suciu},
-    journal = {Proc. VLDB Endow.},
-    volume = {16},
-    number = {4},
-    year = {2022},
+@article{DBLP:journals/pvldb/KayaliS22,
+  author    = {Moe Kayali and
+               Dan Suciu},
+  title     = {Quasi-stable Coloring for Graph Compression: Approximating Max-Flow,
+               Linear Programs, and Centrality},
+  journal   = {Proc. {VLDB} Endow.},
+  volume    = {16},
+  number    = {4},
+  pages     = {803--815},
+  year      = {2022},
+  url       = {https://www.vldb.org/pvldb/vol16/p803-kayali.pdf}
 }
 ```
