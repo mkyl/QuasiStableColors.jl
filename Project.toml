@@ -1,7 +1,7 @@
 name = "QuasiStableColors"
 uuid = "9c3856af-3e7c-4d34-a6af-a406867b22e4"
 authors = ["Moe Kayali <kayali@cs.washington.edu>"]
-version = "0.2.2"
+version = "0.2.3"
 
 [deps]
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
