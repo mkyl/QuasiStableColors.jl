@@ -249,3 +249,15 @@ function q_color(G::AbstractGraph{T};
     @debug "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
     return P
 end
+
+function q_color_dir(G::SimpleDiGraph; args...)
+    G⁻ = reverse(G)
+    P⁺ = q_color(G; args...)
+    @warn P⁺
+    weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G,
+    Float64; dir=:both))
+    weights.nzval .= 1.0
+    P⁻ = q_color(G⁻; weights=copy(transpose(weights)), args...)
+    @warn P⁻
+    return filter(!isempty, map(x -> ∩(x[1], x[2]), Iterators.product(P⁺, P⁻)))
+end

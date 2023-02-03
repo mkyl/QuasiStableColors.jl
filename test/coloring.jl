@@ -126,7 +126,7 @@ end
         add_edge!(G, 2, 3)
         add_edge!(G, 3, 4)
 
-        P = q_color(G, q=0.0)
+        P = q_color_dir(G, q=0.0)
         P_true = Set([Set([1,]), Set([2, 3]), Set([4,])])
         @test Set(Set(x) for x in P) == P_true
     end
@@ -137,7 +137,7 @@ end
         add_edge!(G, 2, 3)
         add_edge!(G, 3, 4)
 
-        P = q_color(G, q=2.0)
+        P = q_color_dir(G, q=2.0)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
