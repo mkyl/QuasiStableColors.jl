@@ -141,4 +141,18 @@ end
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
+
+    @testset "simple graph" begin
+        edges = [
+            Edge(1, 3),
+            Edge(1, 4),
+            Edge(2, 1),
+            Edge(4, 1),
+        ]
+        G = SimpleDiGraphFromIterator(edges)
+
+        P = q_color(G, q=2.0)
+        V = Set(vertices(G))
+        @test Set(Set(x) for x in P) == Set([V])
+    end
 end
