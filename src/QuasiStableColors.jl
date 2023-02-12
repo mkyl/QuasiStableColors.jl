@@ -8,7 +8,7 @@ include("centrality.jl")
 include("flow.jl")
 include("optimize.jl")
 
-export refine_stable, q_color, refine_bipartite, Color, q_color_dir
+export refine_stable, q_color, refine_bipartite, Color
 export approx_betweenness_centrality
 export lifted_maxflow
 export lifted_maximize, lifted_minimize, maximize, minimize
