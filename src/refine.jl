@@ -221,31 +221,45 @@ function q_color(G::AbstractGraph{T};
     end
 
     if weights === nothing
-        weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G,
-            Float64; dir=:both))
+        weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64))
         weights.nzval .= 1.0
     end
+    weightsᵀ = SparseMatrixCSC(transpose(weights))
 
-    color_stats = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
-    update_stats!(color_stats, weights, P)
+    color_stats_out = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
+    color_stats_in  = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
+    update_stats!(color_stats_out, weights, P)
+    update_stats!(color_stats_in, weightsᵀ, P)
 
     while length(P) < n_colors
         # check if we need to grow data structures
-        if length(P) == color_stats.n
-            color_stats = ColorStats(color_stats, nv(G), color_stats.n * 2)
+        if length(P) == color_stats_out.n
+            color_stats_out = ColorStats(color_stats_out, nv(G), color_stats_out.n * 2)
+            color_stats_in = ColorStats(color_stats_in, nv(G), color_stats_in.n * 2)
         end
 
-        witness_i, witness_j, split_deg, _, q_error = pick_witness(P, color_stats)
+        witness⁺ᵢ, witness⁺ⱼ, split_deg⁺, _, q_error⁺ = pick_witness(P, color_stats_out)
+        witness⁻ᵢ, witness⁻ⱼ, split_deg⁻, _, q_error⁻ = pick_witness(P, color_stats_in)
 
-        if q_error <= q
+        if q_error⁺ ≤ q && q_error⁻ ≤ q
             break
         end
 
-        split_color!(P, color_stats, witness_i, witness_j, split_deg)
-        update_stats!(color_stats, weights, P, witness_i, length(P))
+        if q_error⁺ ≥ q_error⁻
+            split_color!(P, color_stats_out, witness⁺ᵢ, witness⁺ⱼ, split_deg⁺)
+            update_stats!(color_stats_out, weights, P, witness⁺ᵢ, length(P))
+            update_stats!(color_stats_in, weightsᵀ, P, witness⁺ᵢ, length(P))
+        else
+            split_color!(P, color_stats_in, witness⁻ᵢ, witness⁻ⱼ, split_deg⁻)
+            update_stats!(color_stats_out, weights, P, witness⁻ᵢ, length(P))
+            update_stats!(color_stats_in, weightsᵀ, P, witness⁻ᵢ, length(P))
+        end
+
     end
 
-    _, _, _, error, q_error = pick_witness(P, color_stats)
+    _, _, _, _, q_error⁺ = pick_witness(P, color_stats_out)
+    _, _, _, _, q_error⁻ = pick_witness(P, color_stats_in)
+    q_error = max(q_error⁺, q_error⁻)
     @debug "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
     return P
 end
