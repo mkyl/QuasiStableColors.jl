@@ -91,6 +91,7 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
 
     #errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
     # .* [length(P_i) for P_i in P]
+    # errors .= abs.(upper_deg - lower_deg) / (abs.(upper_deg) + abs.(lower_deg))
     errors .= upper_deg - lower_deg
 
     # check for NaN or Inf
@@ -132,6 +133,7 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
         lower_deg[i, new] = minimum(stats.neighbor[X, new])
     end
 
+    # errors .= abs.(upper_deg - lower_deg) / (abs.(upper_deg) + abs.(lower_deg))
     errors .= upper_deg - lower_deg
 
     # check for NaN or Inf
@@ -167,7 +169,6 @@ function pick_witness(P, stats::ColorStats)
 
     _, witness = findmax(errors)
     q_error = maximum(upper_deg - lower_deg)
-    error_val = mean(errors)
     witness_i, witness_j = witness[1], witness[2]
 
     split_deg = mean(stats.neighbor[P[witness_i], witness_j])
@@ -180,7 +181,7 @@ function pick_witness(P, stats::ColorStats)
         end
     end
 
-    return witness_i, witness_j, split_deg, error_val, q_error
+    return witness_i, witness_j, split_deg, q_error
 end
 
 """
@@ -194,12 +195,12 @@ end
     )
 
 
-Compute a quasi-stable coloring for the undirected graph `G`. Typically, you should 
+Compute a quasi-stable coloring for the graph `G`. Typically, you should 
 set one of:
 - **`q`**: maximum q-error allowed
 - **`n_colors`**: number of colors to use
 
-Optional parameters:
+Advanced, optional parameters:
 - **`warm_start`**: coloring to refine. If not provided, start using trivial 
 (single color) partitioning assumed.
 - **`weights`**: edge weights to use
@@ -221,31 +222,45 @@ function q_color(G::AbstractGraph{T};
     end
 
     if weights === nothing
-        weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G,
-            Float64; dir=:both))
+        weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64))
         weights.nzval .= 1.0
     end
+    weightsᵀ = SparseMatrixCSC(transpose(weights))
 
-    color_stats = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
-    update_stats!(color_stats, weights, P)
+    # + symbol represents out-degree, - symbol in-degree 
+    color_stats⁺ = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
+    color_stats⁻  = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
+    update_stats!(color_stats⁺, weights, P)
+    update_stats!(color_stats⁻, weightsᵀ, P)
 
     while length(P) < n_colors
         # check if we need to grow data structures
-        if length(P) == color_stats.n
-            color_stats = ColorStats(color_stats, nv(G), color_stats.n * 2)
+        if length(P) == color_stats⁺.n
+            color_stats⁺ = ColorStats(color_stats⁺, nv(G), color_stats⁺.n * 2)
+            color_stats⁻ = ColorStats(color_stats⁻, nv(G), color_stats⁻.n * 2)
         end
 
-        witness_i, witness_j, split_deg, _, q_error = pick_witness(P, color_stats)
+        witness⁺ᵢ, witness⁺ⱼ, split_deg⁺, q_error⁺ = pick_witness(P, color_stats⁺)
+        witness⁻ᵢ, witness⁻ⱼ, split_deg⁻, q_error⁻ = pick_witness(P, color_stats⁻)
 
-        if q_error <= q
+        if q_error⁺ ≤ q && q_error⁻ ≤ q
             break
         end
 
-        split_color!(P, color_stats, witness_i, witness_j, split_deg)
-        update_stats!(color_stats, weights, P, witness_i, length(P))
+        if q_error⁺ ≥ q_error⁻
+            split_color!(P, color_stats⁺, witness⁺ᵢ, witness⁺ⱼ, split_deg⁺)
+            update_stats!(color_stats⁺, weights, P, witness⁺ᵢ, length(P))
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁺ᵢ, length(P))
+        else
+            split_color!(P, color_stats⁻, witness⁻ᵢ, witness⁻ⱼ, split_deg⁻)
+            update_stats!(color_stats⁺, weights, P, witness⁻ᵢ, length(P))
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁻ᵢ, length(P))
+        end
     end
 
-    _, _, _, error, q_error = pick_witness(P, color_stats)
-    @debug "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
+    _, _, _, q_error⁺ = pick_witness(P, color_stats⁺)
+    _, _, _, q_error⁻ = pick_witness(P, color_stats⁻)
+    q_error = max(q_error⁺, q_error⁻)
+    @debug "refined and got $(length(P)) colors with $q_error q-error"
     return P
 end

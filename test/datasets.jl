@@ -63,7 +63,7 @@ function dblp()
     path = datadep"DBLP/com-dblp.ungraph.txt"
     M = readdlm(path, '\t', Int, '\n', comments=true, comment_char='#')
     n = max(maximum(M[:, 1]), maximum(M[:, 2]))
-    G = SimpleGraph{Int}(n)
+    G = SimpleDiGraph{Int}(n)
     for r in eachrow(M)
         u, v = r[1], r[2]
         add_edge!(G, u, v)
