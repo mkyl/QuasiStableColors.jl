@@ -79,7 +79,7 @@ end
     end
 end
 
-@testset "abs approx stable coloring correctness" begin
+@testset "undirected q-stable coloring" begin
     @testset "one-color chain" begin
         G = SimpleGraph(4)
         add_edge!(G, 1, 1)
@@ -117,32 +117,46 @@ end
         P = q_color(G, q=c)
         @test verify_q_color(G, P, c)
     end
+
+    @testset "simple graph, two colors" begin
+        edges = [
+            Edge(1, 3),
+            Edge(1, 4),
+            Edge(2, 1),
+            Edge(4, 1),
+        ]
+        G = SimpleGraphFromIterator(edges)
+
+        P = q_color(G, q=1.0)
+        P_true = Set([Set([1]), Set([4, 2, 3])])
+        @test Set(Set(x) for x in P) == P_true
+    end
 end
 
 @testset "directed graph correctness" begin
-    @testset "three-color linked list" begin
-        G = SimpleDiGraph(4)
-        add_edge!(G, 1, 2)
-        add_edge!(G, 2, 3)
-        add_edge!(G, 3, 4)
-
-        P = q_color(G, q=0.0)
-        P_true = Set([Set([1,]), Set([2, 3]), Set([4,])])
-        @test Set(Set(x) for x in P) == P_true
-    end
-
     @testset "one-color linked list" begin
         G = SimpleDiGraph(4)
         add_edge!(G, 1, 2)
         add_edge!(G, 2, 3)
         add_edge!(G, 3, 4)
 
-        P = q_color(G, q=2.0)
-        V = Set(vertices(G))
-        @test Set(Set(x) for x in P) == Set([V])
+        P = q_color(G, q=1.0)
+        P_true = Set([Set(vertices(G))])
+        @test Set(Set(x) for x in P) == P_true
     end
 
-    @testset "simple graph" begin
+    @testset "trivial stable coloring" begin
+        G = SimpleDiGraph(4)
+        add_edge!(G, 1, 2)
+        add_edge!(G, 2, 3)
+        add_edge!(G, 3, 4)
+
+        P = q_color(G, q=0.0)
+        V = Set(vertices(G))
+        @test Set(Set(x) for x in P) == Set(Set(x) for x in V)
+    end
+
+    @testset "simple graph, one color" begin
         edges = [
             Edge(1, 3),
             Edge(1, 4),
@@ -154,5 +168,19 @@ end
         P = q_color(G, q=2.0)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
+    end
+
+    @testset "simple graph, two colors" begin
+        edges = [
+            Edge(1, 3),
+            Edge(1, 4),
+            Edge(2, 1),
+            Edge(4, 1),
+        ]
+        G = SimpleDiGraphFromIterator(edges)
+
+        P = q_color(G, q=1.0)
+        P_true = Set([Set([1]), Set([4, 2, 3])])
+        @test Set(Set(x) for x in P) == P_true
     end
 end

@@ -254,7 +254,6 @@ function q_color(G::AbstractGraph{T};
             update_stats!(color_stats_out, weights, P, witness⁻ᵢ, length(P))
             update_stats!(color_stats_in, weightsᵀ, P, witness⁻ᵢ, length(P))
         end
-
     end
 
     _, _, _, _, q_error⁺ = pick_witness(P, color_stats_out)
