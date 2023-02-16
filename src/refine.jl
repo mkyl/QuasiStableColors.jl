@@ -91,6 +91,7 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
 
     #errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
     # .* [length(P_i) for P_i in P]
+    # errors .= abs.(upper_deg - lower_deg) / (abs.(upper_deg) + abs.(lower_deg))
     errors .= upper_deg - lower_deg
 
     # check for NaN or Inf
@@ -132,6 +133,7 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
         lower_deg[i, new] = minimum(stats.neighbor[X, new])
     end
 
+    # errors .= abs.(upper_deg - lower_deg) / (abs.(upper_deg) + abs.(lower_deg))
     errors .= upper_deg - lower_deg
 
     # check for NaN or Inf
@@ -167,7 +169,6 @@ function pick_witness(P, stats::ColorStats)
 
     _, witness = findmax(errors)
     q_error = maximum(upper_deg - lower_deg)
-    error_val = mean(errors)
     witness_i, witness_j = witness[1], witness[2]
 
     split_deg = mean(stats.neighbor[P[witness_i], witness_j])
@@ -180,7 +181,7 @@ function pick_witness(P, stats::ColorStats)
         end
     end
 
-    return witness_i, witness_j, split_deg, error_val, q_error
+    return witness_i, witness_j, split_deg, q_error
 end
 
 """
@@ -239,8 +240,8 @@ function q_color(G::AbstractGraph{T};
             color_stats⁻ = ColorStats(color_stats⁻, nv(G), color_stats⁻.n * 2)
         end
 
-        witness⁺ᵢ, witness⁺ⱼ, split_deg⁺, _, q_error⁺ = pick_witness(P, color_stats⁺)
-        witness⁻ᵢ, witness⁻ⱼ, split_deg⁻, _, q_error⁻ = pick_witness(P, color_stats⁻)
+        witness⁺ᵢ, witness⁺ⱼ, split_deg⁺, q_error⁺ = pick_witness(P, color_stats⁺)
+        witness⁻ᵢ, witness⁻ⱼ, split_deg⁻, q_error⁻ = pick_witness(P, color_stats⁻)
 
         if q_error⁺ ≤ q && q_error⁻ ≤ q
             break
@@ -257,9 +258,9 @@ function q_color(G::AbstractGraph{T};
         end
     end
 
-    _, _, _, _, q_error⁺ = pick_witness(P, color_stats⁺)
-    _, _, _, _, q_error⁻ = pick_witness(P, color_stats⁻)
+    _, _, _, q_error⁺ = pick_witness(P, color_stats⁺)
+    _, _, _, q_error⁻ = pick_witness(P, color_stats⁻)
     q_error = max(q_error⁺, q_error⁻)
-    @debug "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
+    @debug "refined and got $(length(P)) colors with $q_error q-error"
     return P
 end

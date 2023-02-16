@@ -131,6 +131,19 @@ end
         P_true = Set([Set([1]), Set([4, 2, 3])])
         @test Set(Set(x) for x in P) == P_true
     end
+
+    @testset "alternating undirected graph" begin
+        edges = [
+            Edge(1, 2),
+            Edge(4, 3),
+            Edge(5, 6),
+        ]
+        G = SimpleGraphFromIterator(edges)
+
+        P = q_color(G, q=0.0)
+        V = Set(vertices(G))
+        @test Set(Set(x) for x in P) == Set([V])
+    end
 end
 
 @testset "directed graph correctness" begin
@@ -181,6 +194,19 @@ end
 
         P = q_color(G, q=1.0)
         P_true = Set([Set([1]), Set([4, 2, 3])])
+        @test Set(Set(x) for x in P) == P_true
+    end
+
+    @testset "alternating directed graph" begin
+        edges = [
+            Edge(1, 2),
+            Edge(4, 3),
+            Edge(5, 6),
+        ]
+        G = SimpleDiGraphFromIterator(edges)
+
+        P = q_color(G, q=0.0)
+        P_true = Set([Set([1, 4, 5]), Set([2, 3, 6])])
         @test Set(Set(x) for x in P) == P_true
     end
 end
