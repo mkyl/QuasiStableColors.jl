@@ -194,12 +194,12 @@ end
     )
 
 
-Compute a quasi-stable coloring for the undirected graph `G`. Typically, you should 
+Compute a quasi-stable coloring for the graph `G`. Typically, you should 
 set one of:
 - **`q`**: maximum q-error allowed
 - **`n_colors`**: number of colors to use
 
-Optional parameters:
+Advanced, optional parameters:
 - **`warm_start`**: coloring to refine. If not provided, start using trivial 
 (single color) partitioning assumed.
 - **`weights`**: edge weights to use
@@ -226,38 +226,39 @@ function q_color(G::AbstractGraph{T};
     end
     weightsᵀ = SparseMatrixCSC(transpose(weights))
 
-    color_stats_out = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
-    color_stats_in  = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
-    update_stats!(color_stats_out, weights, P)
-    update_stats!(color_stats_in, weightsᵀ, P)
+    # + symbol represents out-degree, - symbol in-degree 
+    color_stats⁺ = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
+    color_stats⁻  = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
+    update_stats!(color_stats⁺, weights, P)
+    update_stats!(color_stats⁻, weightsᵀ, P)
 
     while length(P) < n_colors
         # check if we need to grow data structures
-        if length(P) == color_stats_out.n
-            color_stats_out = ColorStats(color_stats_out, nv(G), color_stats_out.n * 2)
-            color_stats_in = ColorStats(color_stats_in, nv(G), color_stats_in.n * 2)
+        if length(P) == color_stats⁺.n
+            color_stats⁺ = ColorStats(color_stats⁺, nv(G), color_stats⁺.n * 2)
+            color_stats⁻ = ColorStats(color_stats⁻, nv(G), color_stats⁻.n * 2)
         end
 
-        witness⁺ᵢ, witness⁺ⱼ, split_deg⁺, _, q_error⁺ = pick_witness(P, color_stats_out)
-        witness⁻ᵢ, witness⁻ⱼ, split_deg⁻, _, q_error⁻ = pick_witness(P, color_stats_in)
+        witness⁺ᵢ, witness⁺ⱼ, split_deg⁺, _, q_error⁺ = pick_witness(P, color_stats⁺)
+        witness⁻ᵢ, witness⁻ⱼ, split_deg⁻, _, q_error⁻ = pick_witness(P, color_stats⁻)
 
         if q_error⁺ ≤ q && q_error⁻ ≤ q
             break
         end
 
         if q_error⁺ ≥ q_error⁻
-            split_color!(P, color_stats_out, witness⁺ᵢ, witness⁺ⱼ, split_deg⁺)
-            update_stats!(color_stats_out, weights, P, witness⁺ᵢ, length(P))
-            update_stats!(color_stats_in, weightsᵀ, P, witness⁺ᵢ, length(P))
+            split_color!(P, color_stats⁺, witness⁺ᵢ, witness⁺ⱼ, split_deg⁺)
+            update_stats!(color_stats⁺, weights, P, witness⁺ᵢ, length(P))
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁺ᵢ, length(P))
         else
-            split_color!(P, color_stats_in, witness⁻ᵢ, witness⁻ⱼ, split_deg⁻)
-            update_stats!(color_stats_out, weights, P, witness⁻ᵢ, length(P))
-            update_stats!(color_stats_in, weightsᵀ, P, witness⁻ᵢ, length(P))
+            split_color!(P, color_stats⁻, witness⁻ᵢ, witness⁻ⱼ, split_deg⁻)
+            update_stats!(color_stats⁺, weights, P, witness⁻ᵢ, length(P))
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁻ᵢ, length(P))
         end
     end
 
-    _, _, _, _, q_error⁺ = pick_witness(P, color_stats_out)
-    _, _, _, _, q_error⁻ = pick_witness(P, color_stats_in)
+    _, _, _, _, q_error⁺ = pick_witness(P, color_stats⁺)
+    _, _, _, _, q_error⁻ = pick_witness(P, color_stats⁻)
     q_error = max(q_error⁺, q_error⁻)
     @debug "refined and got $(length(P)) colors with $q_error q-error, $error sum error"
     return P
