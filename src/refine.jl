@@ -1,3 +1,4 @@
+include("api.jl")
 include("misc.jl")
 
 using Graphs
@@ -16,7 +17,6 @@ Compute the stable coloring for the undirected graph `G`. Provided for comparasi
 refine_stable(G::AbstractGraph{T}; args...) where {T} =
     q_color(G; q=0.0, args...)
 
-
 """Book-keeping datastructure for the q-coloring algorithm."""
 mutable struct ColorStats
     v::Int
@@ -28,14 +28,7 @@ mutable struct ColorStats
     errors_base::Matrix{Float64}
 end
 
-"""Output of a quasi-stable coloring algorithm."""
-struct QuasiStableColoring{T<:Int}
-    partitions::Vector{Vector{T}}
-    mapping::Dict{T,Color}
-    max_q::Number
-    avg_q::Number
-end
-
+"""Empty stats."""
 function ColorStats(v::Int, n::Int)
     return ColorStats(
         v,
@@ -207,8 +200,8 @@ set one of:
 - **`n_colors`**: number of colors to use
 
 Advanced, optional parameters:
-- **`warm_start`**: coloring to refine. If not provided, start using trivial 
-(single color) partitioning assumed.
+- **`warm_start`**: coloring to refine. If not provided, starts using coarsest
+(single color) partitioning.
 - **`weights`**: edge weights to use
 """
 function q_color(G::AbstractGraph{T};
@@ -228,11 +221,11 @@ function q_color(G::AbstractGraph{T};
         P = deepcopy(warm_start)
     end
 
-    if weights === nothing
-        weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64))
-        weights.nzval .= 1.0
+    if adjacency === nothing
+        adjacency::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64))
+        adjacency.nzval .= 1.0
     end
-    weightsᵀ = SparseMatrixCSC(transpose(weights))
+    adjacencyᵀ = SparseMatrixCSC(transpose(adjacency))
 
     # + symbol represents out-degree, - symbol in-degree 
     color_stats⁺ = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
@@ -269,5 +262,5 @@ function q_color(G::AbstractGraph{T};
     _, _, _, q_error⁻ = pick_witness(P, color_stats⁻)
     q_error = max(q_error⁺, q_error⁻)
     @debug "refined and got $(length(P)) colors with $q_error q-error"
-    return P
+    return qColoring(P, q_error)
 end
