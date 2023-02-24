@@ -84,7 +84,6 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
 
     if weighting
         errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
-        # .* [length(P_i) for P_i in P]
     else
         errors .= upper_deg - lower_deg
     end
