@@ -192,7 +192,7 @@ end
         ]
         G = SimpleDiGraphFromIterator(edges)
 
-        P = q_color(G, q=1.0)
+        P = q_color(G, q=1.0, weighting=true)
         P_true = Set([Set([1]), Set([4, 2, 3])])
         @test Set(Set(x) for x in P) == P_true
     end

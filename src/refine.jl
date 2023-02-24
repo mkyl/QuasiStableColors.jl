@@ -73,7 +73,7 @@ end
 
 """Update stats by recomputing everything."""
 function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int},
-    P::Vector{Vector{T}}) where {T}
+    P::Vector{Vector{T}}; weighting=false) where {T}
     P_sparse = partition_matrix(P)
     stats.neighbor = weights * P_sparse
 
@@ -89,10 +89,12 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
         lower_deg[i, :] .= transpose(minimum(stats.neighbor[X, :], dims=1))
     end
 
-    #errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
-    # .* [length(P_i) for P_i in P]
-    # errors .= abs.(upper_deg - lower_deg) / (abs.(upper_deg) + abs.(lower_deg))
-    errors .= upper_deg - lower_deg
+    if weighting
+        errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
+        # .* [length(P_i) for P_i in P]
+    else
+        errors .= upper_deg - lower_deg
+    end
 
     # check for NaN or Inf
     @assert all(isfinite, errors)
@@ -100,7 +102,7 @@ end
 
 """Update stats by splitting one partition."""
 function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int},
-    P::Vector{Vector{T}}, old::Int, new::Int) where {T}
+    P::Vector{Vector{T}}, old::Int, new::Int; weighting=weighting) where {T}
     old_nodes = P[old]
     new_nodes = P[new]
 
@@ -133,8 +135,12 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
         lower_deg[i, new] = minimum(stats.neighbor[X, new])
     end
 
-    # errors .= abs.(upper_deg - lower_deg) / (abs.(upper_deg) + abs.(lower_deg))
-    errors .= upper_deg - lower_deg
+    if weighting
+        errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
+        # .* [length(P_i) for P_i in P]
+    else
+        errors .= upper_deg - lower_deg
+    end
 
     # check for NaN or Inf
     @assert all(isfinite, errors)
@@ -209,6 +215,7 @@ function q_color(G::AbstractGraph{T};
     weights::Union{SparseMatrixCSC{<:Number,Int},Nothing}=nothing,
     special::Set{T}=Set{T}(),
     warm_start::Vector{Vector{T}}=Vector{Vector{T}}(),
+    weighting=false,
     n_colors=Inf,
     q::Float64=0.0) where {T}
 
@@ -229,9 +236,9 @@ function q_color(G::AbstractGraph{T};
 
     # + symbol represents out-degree, - symbol in-degree 
     color_stats⁺ = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
-    color_stats⁻  = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
-    update_stats!(color_stats⁺, weights, P)
-    update_stats!(color_stats⁻, weightsᵀ, P)
+    color_stats⁻ = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
+    update_stats!(color_stats⁺, weights, P, weighting=weighting)
+    update_stats!(color_stats⁻, weightsᵀ, P, weighting=weighting)
 
     while length(P) < n_colors
         # check if we need to grow data structures
@@ -249,12 +256,12 @@ function q_color(G::AbstractGraph{T};
 
         if q_error⁺ ≥ q_error⁻
             split_color!(P, color_stats⁺, witness⁺ᵢ, witness⁺ⱼ, split_deg⁺)
-            update_stats!(color_stats⁺, weights, P, witness⁺ᵢ, length(P))
-            update_stats!(color_stats⁻, weightsᵀ, P, witness⁺ᵢ, length(P))
+            update_stats!(color_stats⁺, weights, P, witness⁺ᵢ, length(P), weighting=weighting)
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁺ᵢ, length(P), weighting=weighting)
         else
             split_color!(P, color_stats⁻, witness⁻ᵢ, witness⁻ⱼ, split_deg⁻)
-            update_stats!(color_stats⁺, weights, P, witness⁻ᵢ, length(P))
-            update_stats!(color_stats⁻, weightsᵀ, P, witness⁻ᵢ, length(P))
+            update_stats!(color_stats⁺, weights, P, witness⁻ᵢ, length(P), weighting=weighting)
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁻ᵢ, length(P), weighting=weighting)
         end
     end
 
