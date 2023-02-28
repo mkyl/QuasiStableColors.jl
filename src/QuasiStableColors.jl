@@ -3,7 +3,7 @@ programs and betweenness centrality."""
 module QuasiStableColors
 
 include("api.jl")
-export qColoring, Color, partition, node_map, max_q_err, super_graph
+export Coloring, partition, node_map, max_q_err, super_graph
 
 include("refine.jl")
 export refine_stable, q_color

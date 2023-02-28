@@ -199,7 +199,7 @@ set one of:
 - **`n_colors`**: number of colors to use
 
 Advanced, optional parameters:
-- **`adjacency`**: edge weights to use
+- **`weights`**: edge weights to use
 - **`weighting`**: whether to prioritize larger colors (i.e. with more members).
 `false` to prioritize colors with the largest error, regardless of color size.
 - **`warm_start`**: coloring to refine. If not provided, starts using coarsest
@@ -223,11 +223,11 @@ function q_color(G::AbstractGraph{T};
         P = deepcopy(warm_start)
     end
 
-    if adjacency === nothing
-        adjacency::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64))
-        adjacency.nzval .= 1.0
+    if weights === nothing
+        weights::SparseMatrixCSC{Float64,Int} = copy(adjacency_matrix(G, Float64))
+        weights.nzval .= 1.0
     end
-    adjacencyᵀ = SparseMatrixCSC(transpose(adjacency))
+    weightsᵀ = SparseMatrixCSC(transpose(weights))
 
     # + symbol represents out-degree, - symbol in-degree 
     color_stats⁺ = ColorStats(nv(G), floor(Int, min(n_colors, BASE_MATRIX_SIZE)))
@@ -251,12 +251,16 @@ function q_color(G::AbstractGraph{T};
 
         if q_error⁺ ≥ q_error⁻
             split_color!(P, color_stats⁺, witness⁺ᵢ, witness⁺ⱼ, split_deg⁺)
-            update_stats!(color_stats⁺, weights, P, witness⁺ᵢ, length(P), weighting=weighting)
-            update_stats!(color_stats⁻, weightsᵀ, P, witness⁺ᵢ, length(P), weighting=weighting)
+            update_stats!(color_stats⁺, weights, P, witness⁺ᵢ, length(P),
+                weighting=weighting)
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁺ᵢ, length(P),
+                weighting=weighting)
         else
             split_color!(P, color_stats⁻, witness⁻ᵢ, witness⁻ⱼ, split_deg⁻)
-            update_stats!(color_stats⁺, weights, P, witness⁻ᵢ, length(P), weighting=weighting)
-            update_stats!(color_stats⁻, weightsᵀ, P, witness⁻ᵢ, length(P), weighting=weighting)
+            update_stats!(color_stats⁺, weights, P, witness⁻ᵢ, length(P),
+                weighting=weighting)
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁻ᵢ, length(P),
+                weighting=weighting)
         end
     end
 
@@ -264,5 +268,5 @@ function q_color(G::AbstractGraph{T};
     _, _, _, q_error⁻ = pick_witness(P, color_stats⁻)
     q_error = max(q_error⁺, q_error⁻)
     @debug "refined and got $(length(P)) colors with $q_error q-error"
-    return qColoring(P, q_error)
+    return Coloring(P, q_error, color_stats⁺, color_stats⁻)
 end

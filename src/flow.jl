@@ -3,10 +3,8 @@ module Flow
 
 export lifted_maxflow
 
-using QuasiStableColors
+using QuasiStableColors: q_color, super_graph, node_map
 using Graphs, GraphsFlows, SparseArrays
-
-include("api.jl")
 
 """
     lifted_maxflow(
@@ -23,7 +21,7 @@ defined using `weights`; if none provided, unit capacities assumed.
 Uses a quasi-stable coloring with maximum error `q` or `n_colors` colors, whichever is
 smaller."""
 function lifted_maxflow(G, s::Int, t::Int; args...)::Number
-    C = q_color(G; adjacency=weights, special=Set([s, t]), args...)
+    C = q_color(G; special=Set([s, t]), args...)
     G₀, C₀ = super_graph(C)
     𝜑 = node_map(C)
     s₀, t₀ = 𝜑[s], 𝜑[t]

@@ -1,6 +1,8 @@
 using Test
 
+using QuasiStableColors: partitions, q_color
 using Graphs
+
 
 include("datasets.jl")
 
@@ -45,7 +47,8 @@ end
         add_edge!(G, 3, 4)
         add_edge!(G, 4, 4)
 
-        P = refine_stable(G)
+        C = refine_stable(G)
+        P = partitions(C)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
@@ -55,7 +58,8 @@ end
         add_edge!(G, 1, 2)
         add_edge!(G, 2, 3)
 
-        P = refine_stable(G)
+        C = refine_stable(G)
+        P = partitions(C)
         @test Set(Set(x) for x in P) == Set([Set([1, 3]), Set([2])])
     end
 
@@ -72,7 +76,8 @@ end
         add_edge!(G, 7, 8)
         add_edge!(G, 8, 9)
 
-        P = refine_stable(G)
+        C = refine_stable(G)
+        P = partitions(C)
         P_true = Set([Set([6, 1]), Set([3]), Set([5, 9]), Set([2, 8]), Set([4, 7])])
         @test length(P) == 5
         @test Set(Set(x) for x in P) == P_true
@@ -88,7 +93,8 @@ end
         add_edge!(G, 3, 4)
         add_edge!(G, 4, 4)
 
-        P = q_color(G, q=2.0)
+        C = q_color(G, q=2.0)
+        P = partitions(C)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
@@ -98,7 +104,8 @@ end
         add_edge!(G, 1, 2)
         add_edge!(G, 2, 3)
 
-        P = q_color(G, q=3.0)
+        C = q_color(G, q=3.0)
+        P = partitions(C)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
@@ -107,7 +114,8 @@ end
         G = datasets.openflight()
         c = 4.0
         # to test data structure resizing logic
-        P = q_color(G, q=c)
+        C = q_color(G, q=c)
+        P = partitions(C)
         @test verify_q_color(G, P, c)
     end
 
@@ -127,7 +135,8 @@ end
         ]
         G = SimpleGraphFromIterator(edges)
 
-        P = q_color(G, q=1.0)
+        C = q_color(G, q=1.0)
+        P = partitions(C)
         P_true = Set([Set([1]), Set([4, 2, 3])])
         @test Set(Set(x) for x in P) == P_true
     end
@@ -140,7 +149,8 @@ end
         ]
         G = SimpleGraphFromIterator(edges)
 
-        P = q_color(G, q=0.0)
+        C = q_color(G, q=0.0)
+        P = partitions(C)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
@@ -153,7 +163,8 @@ end
         add_edge!(G, 2, 3)
         add_edge!(G, 3, 4)
 
-        P = q_color(G, q=1.0)
+        C = q_color(G, q=1.0)
+        P = partitions(C)
         P_true = Set([Set(vertices(G))])
         @test Set(Set(x) for x in P) == P_true
     end
@@ -164,7 +175,7 @@ end
         add_edge!(G, 2, 3)
         add_edge!(G, 3, 4)
 
-        P = q_color(G, q=0.0)
+        P = partitions(q_color(G, q=0.0))
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set(Set(x) for x in V)
     end
@@ -178,7 +189,8 @@ end
         ]
         G = SimpleDiGraphFromIterator(edges)
 
-        P = q_color(G, q=2.0)
+        C = q_color(G, q=2.0)
+        P = partitions(C)
         V = Set(vertices(G))
         @test Set(Set(x) for x in P) == Set([V])
     end
@@ -192,7 +204,8 @@ end
         ]
         G = SimpleDiGraphFromIterator(edges)
 
-        P = q_color(G, q=1.0, weighting=true)
+        C = q_color(G, q=1.0, weighting=true)
+        P = partitions(C)
         P_true = Set([Set([1]), Set([4, 2, 3])])
         @test Set(Set(x) for x in P) == P_true
     end
@@ -205,7 +218,8 @@ end
         ]
         G = SimpleDiGraphFromIterator(edges)
 
-        P = q_color(G, q=0.0)
+        C = q_color(G, q=0.0)
+        P = partitions(C)
         P_true = Set([Set([1, 4, 5]), Set([2, 3, 6])])
         @test Set(Set(x) for x in P) == P_true
     end
