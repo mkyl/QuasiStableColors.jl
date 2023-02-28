@@ -6,6 +6,9 @@ struct Coloring{T<:Integer}
     stats_in
 end
 
+Base.show(io::IO, c::Coloring) = print(io, "Quasi-stable coloring(color count=",
+    length(c.partitions), ", max q-error=", c.max_q, ")")
+
 partitions(C::Coloring) = C.partitions
 
 max_q_err(C::Coloring) = C.max_q
