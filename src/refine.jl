@@ -200,9 +200,12 @@ set one of:
 - **`n_colors`**: number of colors to use
 
 Advanced, optional parameters:
+- **`adjacency`**: edge weights to use
+- **`weighting`**: whether to prioritize larger colors (i.e. with more members).
+`false` to prioritize colors with the largest error, regardless of color size.
 - **`warm_start`**: coloring to refine. If not provided, starts using coarsest
 (single color) partitioning.
-- **`weights`**: edge weights to use
+- **`special`**: node IDs which will always get their own colors.
 """
 function q_color(G::AbstractGraph{T};
     weights::Union{SparseMatrixCSC{<:Number,Int},Nothing}=nothing,
