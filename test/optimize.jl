@@ -1,6 +1,7 @@
 using QuasiStableColors: Optimize
 
 using Test
+using Tulip
 
 """
 Return A, b, c in the Stigler diet problem
@@ -102,19 +103,24 @@ end
 
 @testset "lifted linear optimization" begin
     @testset "stable coloring, stigler diet" begin
+        model = Tulip.Optimizer()
+
         A, b, c = stigler_diet()
-        V1 = Optimize.minimize(A, b, c)
-        V2 = Optimize.lifted_minimize(A, b, c; q=0.0)
+        V1 = Optimize.minimize(model, A, b, c)
+        V2 = Optimize.lifted_minimize(model, A, b, c; q=0.0)
         @test c' * V1 ≈ V2
     end
 
     @testset "example from paper" begin
-        A = [4 8 2; 6 5 1; 7 4 2; 3 1 22; 2 3 21]
-        b = [20, 20, 21, 50, 51]
-        c = [9, 10, 50]
-        z = c' * Optimize.maximize(A, b, c)
+        model = Tulip.Optimizer()
+
+        A::Matrix{Float64} = [4 8 2; 6 5 1; 7 4 2; 3 1 22; 2 3 21]
+        b::Vector{Float64} = [20, 20, 21, 50, 51]
+        c::Vector{Float64} = [9, 10, 50]
+
+        z = c' * Optimize.maximize(model, A, b, c)
         @test z ≈ 128.157 atol = 0.001
-        z₀ = Optimize.lifted_maximize(A, b, c; q=1.0)
+        z₀ = Optimize.lifted_maximize(model, A, b, c; q=1.0)
         # meets or beats reported error
         @test abs(z₀ - z) <= abs(z - 130.199)
     end
