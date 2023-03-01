@@ -14,9 +14,15 @@ First, install the library. One option is to run the following code:
 using Pkg
 Pkg.add("QuasiStableColors")
 ```
-After installing activate the libary:
+After installing activate the library:
 ```@example coloring
 using QuasiStableColors
+```
+
+Let's use `QSC` as shorthand for the library name:
+```@example coloring
+const QSC = QuasiStableColors
+nothing #hide
 ```
 ## Coloring Graphs
 Let's create a simple example graph.
@@ -37,17 +43,20 @@ save("graph.svg", f); nothing #hide
 
 Now, let's generate a quasi-stable coloring `C` where we allow at most one edge error (*i.e.* $q=1$).
 ```@example coloring
-C = QuasiStableColors.q_color(g, q=1.0)
+C = QSC.q_color(g, q=1.0)
 ```
 
-We get a four-partition coloring. Let's assign a unique graphical color to each:
-
+We get a four-partition coloring. How are the nodes grouped?
+```@example coloring
+P = QSC.partitions(C)
+```
+Let's assign a unique visual color to each group:
 ```@example coloring
 using Colors
-palette = distinguishable_colors(length(C))
-palette = distinguishable_colors(length(C), [RGB(1,1,1), RGB(0,0,0)], dropseed=true) #hide
+palette = distinguishable_colors(length(P))
+palette = distinguishable_colors(length(P), [RGB(1,1,1), RGB(0,0,0)], dropseed=true) #hide
 color_map = Array{Colorant}(undef, nv(g))
-for (i, x) in enumerate(C)
+for (i, x) in enumerate(P)
     color_map[x] .= palette[i]
 end 
 ```
@@ -60,6 +69,17 @@ save("graph-colors.svg", f_c); nothing #hide
 ```
 
 ![Same graph, now colored according to above partition](graph-colors.svg)
+
+## Summary Graphs
+Let's build a summary graph using the coloring `C`. Each supernode represents one color:
+
+```@example coloring
+G_super, weights = QSC.super_graph(C)
+f, ax, p = graphplot(G_super, node_color=palette, node_size=32) #hide
+hidedecorations!(ax); hidespines!(ax) #hide
+save("super-graph.svg", f); nothing #hide
+```
+![Graph of supernodes implied by coloring](super-graph.svg)
 
 ## Approximation
 This section on how to use the coloring for graph algorithms is upcoming--for now see

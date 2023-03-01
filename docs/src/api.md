@@ -28,12 +28,18 @@ add_edge!(G, 3, 4)
 add_edge!(G, 4, 4)
 
 # Color it
-P = q_color(G, q=2.0)
+C = q_color(G, q=2.0)
 ```
 
 ```@docs
+Coloring
+node_map
+super_graph
+```
+
+For the specific case of bipartite graphs, consider:
+```@docs
 refine_bipartite
-QuasiStableColoring
 ```
 
 Finally, for comparison with prior work, we provide the following method.
@@ -49,11 +55,12 @@ An example of how to compute an approximate maximum flow:
 ```@example
 using QuasiStableColors.Flow: lifted_maxflow
 using Graphs
+using GraphsFlows: maximum_flow
 
 E = [Edge(1,2), Edge(1, 3), Edge(1, 4), Edge(2, 5), Edge(3, 5), Edge(4, 5)]
 G = SimpleGraphFromIterator(E)
 
-lifted_maxflow(G, 1, 5; q=1.0)
+lifted_maxflow(maximum_flow, G, 1, 5; q=1.0)
 ```
 
 ## Betweenness centrality
@@ -100,11 +107,14 @@ Consider the following example linear system from [our paper](https://arxiv.org/
 This system has optimum value ``c^T x^\ast = 128.2``. Let's compute the approximate minimum:
 ```@example
 using QuasiStableColors.Optimize: lifted_maximize
+using Tulip
 
-A = [4 8 2; 6 5 1; 7 4 2; 3 1 22; 2 3 21]
-b = [20, 20, 21, 50, 51]
-c = [9, 10, 50]
-z = lifted_maximize(A, b, c; q=5.0)
+solver = Tulip.Optimizer()
+
+A = [4.0 8 2; 6 5 1; 7 4 2; 3 1 22; 2 3 21]
+b = [20.0, 20, 21, 50, 51]
+c = [9.0, 10, 50]
+z = lifted_maximize(solver, A, b, c; q=5.0)
 "estimated value: $z"
 ```
 This gives us an estimated value of ``c^T x^\ast`` within ``1\%`` of the true value.
