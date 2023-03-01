@@ -16,7 +16,6 @@ Compute the stable coloring for the undirected graph `G`. Provided for comparasi
 refine_stable(G::AbstractGraph{T}; args...) where {T} =
     q_color(G; q=0.0, args...)
 
-
 """Book-keeping datastructure for the q-coloring algorithm."""
 mutable struct ColorStats
     v::Int
@@ -28,14 +27,7 @@ mutable struct ColorStats
     errors_base::Matrix{Float64}
 end
 
-"""Output of a quasi-stable coloring algorithm."""
-struct QuasiStableColoring{T<:Int}
-    partitions::Vector{Vector{T}}
-    mapping::Dict{T,Color}
-    max_q::Number
-    avg_q::Number
-end
-
+"""Empty stats."""
 function ColorStats(v::Int, n::Int)
     return ColorStats(
         v,
@@ -91,7 +83,6 @@ function update_stats!(stats::ColorStats, weights::SparseMatrixCSC{<:Number,Int}
 
     if weighting
         errors .= (upper_deg - lower_deg) .* transpose([(length(P_i)) for P_i in P])
-        # .* [length(P_i) for P_i in P]
     else
         errors .= upper_deg - lower_deg
     end
@@ -207,9 +198,12 @@ set one of:
 - **`n_colors`**: number of colors to use
 
 Advanced, optional parameters:
-- **`warm_start`**: coloring to refine. If not provided, start using trivial 
-(single color) partitioning assumed.
 - **`weights`**: edge weights to use
+- **`weighting`**: whether to prioritize larger colors (i.e. with more members).
+`false` to prioritize colors with the largest error, regardless of color size.
+- **`warm_start`**: coloring to refine. If not provided, starts using coarsest
+(single color) partitioning.
+- **`special`**: node IDs which will always get their own colors.
 """
 function q_color(G::AbstractGraph{T};
     weights::Union{SparseMatrixCSC{<:Number,Int},Nothing}=nothing,
@@ -256,12 +250,16 @@ function q_color(G::AbstractGraph{T};
 
         if q_error⁺ ≥ q_error⁻
             split_color!(P, color_stats⁺, witness⁺ᵢ, witness⁺ⱼ, split_deg⁺)
-            update_stats!(color_stats⁺, weights, P, witness⁺ᵢ, length(P), weighting=weighting)
-            update_stats!(color_stats⁻, weightsᵀ, P, witness⁺ᵢ, length(P), weighting=weighting)
+            update_stats!(color_stats⁺, weights, P, witness⁺ᵢ, length(P),
+                weighting=weighting)
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁺ᵢ, length(P),
+                weighting=weighting)
         else
             split_color!(P, color_stats⁻, witness⁻ᵢ, witness⁻ⱼ, split_deg⁻)
-            update_stats!(color_stats⁺, weights, P, witness⁻ᵢ, length(P), weighting=weighting)
-            update_stats!(color_stats⁻, weightsᵀ, P, witness⁻ᵢ, length(P), weighting=weighting)
+            update_stats!(color_stats⁺, weights, P, witness⁻ᵢ, length(P),
+                weighting=weighting)
+            update_stats!(color_stats⁻, weightsᵀ, P, witness⁻ᵢ, length(P),
+                weighting=weighting)
         end
     end
 
@@ -269,5 +267,5 @@ function q_color(G::AbstractGraph{T};
     _, _, _, q_error⁻ = pick_witness(P, color_stats⁻)
     q_error = max(q_error⁺, q_error⁻)
     @debug "refined and got $(length(P)) colors with $q_error q-error"
-    return P
+    return Coloring(P, q_error, color_stats⁺, color_stats⁻)
 end

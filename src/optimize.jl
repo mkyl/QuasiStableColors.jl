@@ -4,10 +4,10 @@ module Optimize
 export lifted_maximize, lifted_minimize, maximize, minimize
 
 using Graphs
-using JuMP, Tulip
-using MathOptInterface
 using SparseArrays
 using LinearAlgebra
+using MathOptInterface
+const MOI = MathOptInterface
 
 using QuasiStableColors
 
@@ -24,14 +24,15 @@ Approximate the linear program ``\\min c^T x \\text{ where } A x \\geq b, x \\ge
 
 Uses a quasi-stable coloring with maximum error `q` or `n_colors` colors, whichever
 is smaller."""
-lifted_minimize(A, b, c; args...) = _lifted_opt(A, b, c; obj=MathOptInterface.MIN_SENSE,
+lifted_minimize(optimizer, A, b, c; args...) = _lifted_opt(optimizer, A, b, c; obj=MathOptInterface.MIN_SENSE,
     args...)
 """Same as `lifted_minimize` but for the linear program
 ``\\max c^T x \\text{ where } A x \\leq b, x \\geq 0``."""
-lifted_maximize(A, b, c; args...) = _lifted_opt(A, b, c; obj=MathOptInterface.MAX_SENSE,
+lifted_maximize(optimizer, A, b, c; args...) = _lifted_opt(optimizer, A, b, c; obj=MathOptInterface.MAX_SENSE,
     args...)
 
-function _lifted_opt(A, b::Vector, c::Vector; obj=MathOptInterface.MIN_SENSE, args...)
+function _lifted_opt(optimizer::T, A, b::W, c::W; obj=MathOptInterface.MAX_SENSE, args...) where {
+    T<:MOI.AbstractOptimizer,W<:Vector{Float64}}
     Ã::SparseMatrixCSC{Float64,Int} = [A b; transpose(c) 0]
     m, n = size(Ã)
 
@@ -48,7 +49,7 @@ function _lifted_opt(A, b::Vector, c::Vector; obj=MathOptInterface.MIN_SENSE, ar
 
     @debug "lifted linear program size: " size(A₂)
     # solve the lifted problem
-    z₂ = _optimize(A₂, b₂, c₂; obj=obj)
+    z₂ = _optimize(optimizer, A₂, b₂, c₂; obj=obj)
     if (z₂ !== nothing)
         c₂' * z₂
     else
@@ -57,29 +58,46 @@ function _lifted_opt(A, b::Vector, c::Vector; obj=MathOptInterface.MIN_SENSE, ar
 end
 
 "Minimize c^T x where A x >= b, x>=0."
-minimize(A, b, c) = _optimize(A, b, c; obj=MathOptInterface.MIN_SENSE)
+minimize(optimizer, A, b, c) = _optimize(optimizer, A, b, c; obj=MathOptInterface.MIN_SENSE)
 
 "Maximize c^T x where A x <= b, x>=0."
-maximize(A, b, c) = _optimize(A, b, c; obj=MathOptInterface.MAX_SENSE)
+maximize(optimizer, A, b, c) = _optimize(optimizer, A, b, c; obj=MathOptInterface.MAX_SENSE)
 
-function _optimize(A, b, c; obj=MathOptInterface.MAX_SENSE)
-    @assert typeof(b) <: Vector
-    @assert typeof(c) <: Vector
+function _optimize(optimizer::T, A::V, b::U, c::U; obj=MathOptInterface.MAX_SENSE) where {
+    T<:MOI.AbstractOptimizer,U<:AbstractVector{Float64},V<:AbstractMatrix{Float64}}
     @assert size(A) == (length(b), length(c))
 
-    model = Model(Tulip.Optimizer)
-    @variable(model, x[1:length(c)] >= 0)
-    @objective(model, obj, c' * x)
-    if obj == MathOptInterface.MAX_SENSE
-        @constraint(model, A * x .<= b)
-    else
-        @constraint(model, A * x .>= b)
+    x = MOI.add_variables(optimizer, length(c))
+    MOI.set(
+        optimizer,
+        MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
+        MOI.ScalarAffineFunction(MOI.ScalarAffineTerm.(c, x), 0.0),
+    )
+
+    MOI.set(optimizer, MOI.ObjectiveSense(), obj)
+
+    # matrix of constraints
+    for (i, row) in enumerate(eachrow(A))
+        row_function = MOI.ScalarAffineFunction(MOI.ScalarAffineTerm.(row, x), 0.0)
+        if obj == MathOptInterface.MAX_SENSE
+            MOI.add_constraint(optimizer, row_function, MOI.LessThan(b[i]))
+        else
+            MOI.add_constraint(optimizer, row_function, MOI.GreaterThan(b[i]))
+        end
     end
-    optimize!(model)
-    if termination_status(model) == MOI.OPTIMAL
-        return value.(x)
+
+    # positive constraint
+    for x_i in x
+        MOI.add_constraint(optimizer, x_i, MOI.GreaterThan(0.0))
+    end
+
+    MOI.optimize!(optimizer)
+
+    status = MOI.get(optimizer, MOI.TerminationStatus())
+    if status == MOI.OPTIMAL
+        return MOI.get(optimizer, MOI.VariablePrimal(), x)
     else
-        @warn "Solver did not find global minimum" termination_status(model)
+        @warn "Solver did not find global minimum" status
         return nothing
     end
 end
